@@ -34,3 +34,7 @@
 # CMake Build
 
 /build/
+
+# VSCode config
+
+/.vscode/
