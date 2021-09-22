@@ -45,15 +45,21 @@ target_link_directories(${PROJECT_NAME}
 #     ${gflags_LIBS}
 # )
 
+get_target_property(gflags_OUTPUT_NAME gflags OUTPUT_NAME)
+if (OS_WINDOWS)
+    set (gflags_OUTPUT_NAME ${gflags_OUTPUT_NAME}_static)
+endif ()
 
 target_link_libraries(${PROJECT_NAME}
     glad
     glfw3
     imgui
     glogd
-    gflags_nothreads_debug
+    ${gflags_OUTPUT_NAME}_debug
 )
 
 if (APPLE)
   target_link_libraries(${PROJECT_NAME} "-framework Cocoa -framework IOKit")
 endif()
+
+# SET(GLFW_BUILD_DOCS OFF CACHE INTERNAL "HIDE GLFW_BUILD_DOCS" FORCE)

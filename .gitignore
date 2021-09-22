@@ -38,3 +38,7 @@
 # VSCode config
 
 /.vscode/
+
+# MacOS
+
+.DS_Store

@@ -5,6 +5,7 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 
+#define HAVE_SNPRINTF
 #include <glog/logging.h>
 
 static void glfw_error_callback(int error, const char* description)
