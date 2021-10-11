@@ -3,42 +3,117 @@ project(Simple3DReconstruction)
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(3rdparty/glad)
 add_subdirectory(3rdparty/glfw)
 add_subdirectory(3rdparty/imgui)
 # add_subdirectory(3rdparty/opencv)
 add_subdirectory(3rdparty/gflags)
 add_subdirectory(3rdparty/glog)
-add_subdirectory(3rdparty/glad)
+# add_subdirectory(3rdparty/eigen)
+# add_subdirectory(3rdparty/CGAL)
+# add_subdirectory(3rdparty/vcg)
+find_package(OpenMVG REQUIRED)
 
 add_dependencies(imgui glfw)
 add_dependencies(glog gflags)
 
+aux_source_directory(src MAIN_SRC_DIR)
+aux_source_directory(src/app APP_SRC_DIR)
+aux_source_directory(src/ui UI_SRC_DIR)
+aux_source_directory(src/util UTIL_SRC_DIR)
+
 set(SOURCE_LIST
-    main.cpp 
+    ${MAIN_SRC_DIR}
+    ${APP_SRC_DIR}
+    ${UI_SRC_DIR}
+    ${UTIL_SRC_DIR}
 )
 
-add_executable(${PROJECT_NAME}
-    ${SOURCE_LIST}
-)
+
+if(APPLE)
+    # Get a list of all of the files in the data-folder.
+    file(GLOB_RECURSE RES_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*")
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE
+        ${SOURCE_LIST}
+        ${RES_SOURCES}
+    )
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        BUNDLE True
+        MACOSX_BUNDLE_GUI_IDENTIFIER my.domain.style.identifier.${PROJECT_NAME}
+        MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME}
+        MACOSX_BUNDLE_BUNDLE_VERSION "0.1"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "0.1"
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/MacOSXBundleInfo.plist.in
+    )
+
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.app/Contents/Resources/log)
+
+    # Individually set the file's path properties.
+    foreach (FILE ${RES_SOURCES})
+        # Get the relative path from the data-folder to the particular file.
+        file(RELATIVE_PATH NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}/assets" ${FILE})
+
+        # Get the relative path to the file.
+        get_filename_component(NEW_FILE_PATH ${NEW_FILE} DIRECTORY)
+
+        # Set it's location inside the app package (under Resources).
+        set_property(SOURCE ${FILE} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/assets/${NEW_FILE_PATH}")
+
+        # Optional: Add the file to the 'Resources' folder group in Xcode.
+        #           This also preserves folder structure.
+        source_group("Resources/assets/${NEW_FILE_PATH}" FILES "${FILE}")
+    endforeach ()
+
+else()
+    add_executable(${PROJECT_NAME}
+        ${SOURCE_LIST}
+    )
+endif()
+
+
+add_dependencies(${PROJECT_NAME} glad glfw imgui gflags glog)
+
+
+find_path(libuvc_INCLUDE_DIR libuvc/libuvc.h)
+find_library(libuvc_LIBRARY NAMES uvc)
+# message("wtf")
+# message(${libuvc_LIBRARY})
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(libuvc  DEFAULT_MSG
+                                  libuvc_LIBRARY libuvc_INCLUDE_DIR)
+
+mark_as_advanced(libuvc_INCLUDE_DIR libuvc_LIBRARY)
+
+set(libuvc_LIBRARIES ${libuvc_LIBRARY} )
+set(libuvc_INCLUDE_DIRS ${libuvc_INCLUDE_DIR})
+
 
 set(3RD_PARTY_DIR build/_deps)
 
+
+
 target_include_directories(${PROJECT_NAME}
     PUBLIC 3rdparty/glad/include
+    PUBLIC 3rdparty/stb
+    PUBLIC 3rdparty/imgui/include
+    PUBLIC 3rdparty/imgui-filebrowser
     PUBLIC ${3RD_PARTY_DIR}/glfw-src/include
-    PUBLIC ${3RD_PARTY_DIR}/imgui-src
-    PUBLIC ${3RD_PARTY_DIR}/imgui-src/backends
     PUBLIC ${3RD_PARTY_DIR}/glog-build
     PUBLIC ${3RD_PARTY_DIR}/glog-src/src
     PUBLIC ${3RD_PARTY_DIR}/gflags-build/include
+    PUBLIC include
+    PUBLIC ${OPENMVG_INCLUDE_DIRS}
+    PUBLIC ${libuvc_INCLUDE_DIRS}
 )
+
 
 target_link_directories(${PROJECT_NAME}
     PUBLIC build/3rdparty/glad
+    PUBLIC build/3rdparty/imgui
     PUBLIC ${3RD_PARTY_DIR}/glfw-build/src
-    PUBLIC ${3RD_PARTY_DIR}/imgui-build
     PUBLIC ${3RD_PARTY_DIR}/glog-build
     PUBLIC ${3RD_PARTY_DIR}/gflags-build
+    # PUBLIC ${libuvc_LIBRARIES}
 )
 
 # target_link_libraries(${PROJECT_NAME}
@@ -55,7 +130,9 @@ target_link_libraries(${PROJECT_NAME}
     glfw3
     imgui
     glogd
+    ${OPENMVG_LIBRARIES}
     ${gflags_OUTPUT_NAME}_debug
+    ${libuvc_LIBRARIES}
 )
 
 if (APPLE)
@@ -63,3 +140,11 @@ if (APPLE)
 endif()
 
 # SET(GLFW_BUILD_DOCS OFF CACHE INTERNAL "HIDE GLFW_BUILD_DOCS" FORCE)
+
+
+
+if(APPLE)
+
+else()
+    file(COPY ./assets/ DESTINATION ${CMAKE_BINARY_DIR}/bin/assets)
+endif()

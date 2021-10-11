@@ -11,6 +11,7 @@ FetchContent_GetProperties(gflags)
 set(gflags_DIR ${gflags_BINARY_DIR})
 set(BUILD_TESTING OFF)
 set(WITH_GTEST OFF)
+set(HAVE_SNPRINTF TRUE)
 
 FetchContent_GetProperties(glog)
 if(NOT glog_POPULATED)
@@ -19,3 +20,4 @@ endif()
 
 file(COPY ./patch/CMakeLists.txt DESTINATION ${glog_SOURCE_DIR})
 add_subdirectory(${glog_SOURCE_DIR} ${glog_BINARY_DIR})
+

@@ -154,7 +154,8 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 
 # NOTE: Cannot use check_function_exists here since >=vc-14.0 can define
 # snprintf as an inline function
-check_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
+# check_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
+set(HAVE_SNPRINTF)
 
 check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
