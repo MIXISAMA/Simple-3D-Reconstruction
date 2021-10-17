@@ -1,12 +1,10 @@
-#include "app/my_application.h"
+#include "app/application.h"
 #include "ui/main_window.h"
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
-    MainWindow mainWindow;
-    MyApplication app(argv[0], mainWindow);
-    LOG(INFO) << "Application Started";
-    app.loop();
-    LOG(INFO) << "Application Stopped";
+    mixi::app::Application app(argv[0]);
+    mixi::s3r::MainWindow window;
+    app.loop(&window);
     return 0;
 }

@@ -1,53 +1,25 @@
-#include "app/my_application.h"
+#include "app/application.h"
 
-MyApplication::MyApplication(char* arg, ImguiWindow& mainWindow) :
-    mainWindow(mainWindow),
-    glfwWindow(nullptr)
+namespace mixi
 {
-    appGlogInit(arg);
-    appGlfwInit();
-    appImguiInit();
-    mainWindow.init();
-}
 
-MyApplication::~MyApplication()
+namespace app
 {
-    mainWindow.destroy();
-    appImguiShutdown();
-    appGlfwTerminate();
-    appGlogShutdown();
-}
 
-void MyApplication::loop() const
+Glog::Glog(const char* arg, const char* log_dir)
 {
-    while (!appShouldClose()) {
-        appGlfwPreRender();
-        appImguiPreRender();
-        mainWindow.render();
-        appImguiPostRender();
-        appGlfwPostRender();
-    }
-}
-
-bool MyApplication::appShouldClose() const
-{
-    return glfwWindowShouldClose(glfwWindow);
-}
-
-void MyApplication::appGlogInit(char* arg) const
-{
-    FLAGS_log_dir = "./log";
+    FLAGS_log_dir = log_dir;
     google::InitGoogleLogging(arg);
 }
 
-void MyApplication::appGlogShutdown() const
+Glog::~Glog()
 {
     google::ShutdownGoogleLogging();
 }
 
-void MyApplication::appGlfwInit()
+Glfw::Glfw()
 {
-    glfwSetErrorCallback(AppGlfwErrorCallback);
+    glfwSetErrorCallback(ErrorCallback_);
     if (!glfwInit()) {
         throw std::runtime_error("glfw init error!");
     }
@@ -66,12 +38,12 @@ void MyApplication::appGlfwInit()
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 
-    glfwWindow = (GLFWwindow*)glfwCreateWindow(1280, 720, "Simple 3D Reconstruction", NULL, NULL);
-    if (glfwWindow == nullptr) {
+    glfwWindow_ = (GLFWwindow*)glfwCreateWindow(1280, 720, "Simple 3D Reconstruction", NULL, NULL);
+    if (glfwWindow_ == nullptr) {
         glfwTerminate();
         throw std::runtime_error("create main window error!");
     }
-    glfwMakeContextCurrent(glfwWindow);
+    glfwMakeContextCurrent(glfwWindow_);
     if (!gladLoadGL(glfwGetProcAddress)) {
         glfwTerminate();
         throw std::runtime_error("Failed to initialize GLAD!");
@@ -79,29 +51,39 @@ void MyApplication::appGlfwInit()
     glfwSwapInterval(1); // Enable vsync
 }
 
-void MyApplication::appGlfwPreRender() const
+Glfw::~Glfw()
 {
-    // Todo: Create and destroy the same object repeatedly.
+    glfwTerminate();
+}
+
+GLFWwindow* Glfw::glfwWindow() const
+{
+    return glfwWindow_;
+}
+
+void Glfw::preRender() const
+{
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     int display_w, display_h;
-    glfwGetFramebufferSize(glfwWindow, &display_w, &display_h);
+    glfwGetFramebufferSize(glfwWindow_, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
     glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void MyApplication::appGlfwPostRender() const
+void Glfw::postRender() const
 {
     glfwPollEvents();
-    glfwSwapBuffers(glfwWindow);
+    glfwSwapBuffers(glfwWindow_);
 }
 
-void MyApplication::appGlfwTerminate() const
+void Glfw::ErrorCallback_(int error, const char* description)
 {
-    glfwTerminate();
+    LOG(ERROR) << "Glfw Error " << error << ": " << description;
 }
 
-void MyApplication::appImguiInit() const
+
+Imgui::Imgui(GLFWwindow* glfwWindow)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -118,7 +100,14 @@ void MyApplication::appImguiInit() const
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void MyApplication::appImguiPreRender() const
+Imgui::~Imgui()
+{
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+}
+
+void Imgui::preRender() const
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -147,7 +136,7 @@ void MyApplication::appImguiPreRender() const
     ImGui::End();
 }
 
-void MyApplication::appImguiPostRender() const
+void Imgui::postRender() const
 {
     ImGui::Render();
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -160,14 +149,37 @@ void MyApplication::appImguiPostRender() const
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void MyApplication::appImguiShutdown() const
+Application::Application(const char* arg) :
+    glog_(arg, "./log"),
+    glfw_(),
+    imgui_(glfw_.glfwWindow()),
+    mainWindow_(nullptr)
 {
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    LOG(INFO) << "Application Started";
 }
 
-void MyApplication::AppGlfwErrorCallback(int error, const char* description)
+Application::~Application()
 {
-    LOG(ERROR) << "Glfw Error " << error << ": " << description;
+    LOG(INFO) << "Application Stopped";
 }
+
+void Application::loop(ImguiWindow* mainWindow) const
+{
+    while (!shouldClose_()) {
+        glfw_.preRender();
+        imgui_.preRender();
+        mainWindow->render();
+        imgui_.postRender();
+        glfw_.postRender();
+    }
+}
+
+bool Application::shouldClose_() const
+{
+    return glfwWindowShouldClose(glfw_.glfwWindow());
+}
+
+
+} 
+}
+

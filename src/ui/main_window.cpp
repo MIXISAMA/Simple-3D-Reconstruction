@@ -1,55 +1,55 @@
 #include "ui/main_window.h"
-#include "ui/calibration_window.h"
-#include "util/image_util.h"
+
+#include "ui/camera_window.h"
+#include "ui/sparse_point_cloud_window.h"
+#include "ui/dense_point_cloud_window.h"
+
+namespace mixi
+{
+namespace s3r
+{
 
 MainWindow::MainWindow() :
-    currentWindow(&cameraWindow)
+    usageSelectorWindow_(),
+    workspaceWindow_(),
+    usageWindow_(nullptr)
 {
 
-}
-
-void MainWindow::init()
-{
-    ImVec4 color = ImGui::GetStyleColorVec4(0);
-    float light = color.x * 0.299f + color.y * 0.587f + color.z * 0.114f;
-    bool revertColor = light > 0.5f;
-
-    menuBtnTexCamera = LoadTextureFromFile("assets/211634_camera_icon.png", revertColor);
-    menuBtnTexCalibration = LoadTextureFromFile("assets/6602457_deform_design_graphic_icon.png", revertColor);
-    calirationWindow.init();
-    cameraWindow.init();
-}
-
-void MainWindow::destroy()
-{
-    calirationWindow.destroy();
-    cameraWindow.destroy();
 }
 
 void MainWindow::render()
 {
-    ImGui::Begin("Usage");
+    usageSelectorWindow_.render();
 
-    ImGui::PushID(0);
-    if (ImGui::ImageButton(
-            (void*)(intptr_t)menuBtnTexCalibration.texture,
-            ImVec2(menuBtnTexCalibration.width, menuBtnTexCalibration.height)
-        )) {
-        currentWindow = &calirationWindow;
-    }
-    ImGui::PopID();
-    ImGui::PushID(1);
-    if (ImGui::ImageButton(
-            (void*)(intptr_t)menuBtnTexCamera.texture,
-            ImVec2(menuBtnTexCamera.width, menuBtnTexCamera.height)
-        )) {
-        currentWindow = &cameraWindow;
-    }
-    ImGui::PopID();
+    workspaceWindow_.render();
 
-    // ImGui::NewLine();
-    // ImGui::Text("Pressed %d times.", pressed_count);
-    ImGui::End();
-
-    currentWindow->render();
+    renderUsageWindow_();
 }
+
+void MainWindow::renderUsageWindow_()
+{
+    switch (usageSelectorWindow_.selected())
+    {
+    case UsageSelectorWindow::Usage::CAMERA:
+        if(dynamic_cast<CameraWindow*>(usageWindow_.get()) == nullptr) {
+            usageWindow_ = ImguiWindow::Ptr(new CameraWindow());
+        }
+        break;
+    case UsageSelectorWindow::Usage::SPARSE_POINT_CLOUD:
+        if(dynamic_cast<SparsePointCloudWindow*>(usageWindow_.get()) == nullptr) {
+            usageWindow_ = ImguiWindow::Ptr(new SparsePointCloudWindow());
+        }
+        break;
+    case UsageSelectorWindow::Usage::DENSE_POINT_CLOUD:
+        if(dynamic_cast<DensePointCloudWindow*>(usageWindow_.get()) == nullptr) {
+            usageWindow_ = ImguiWindow::Ptr(new DensePointCloudWindow());
+        }
+        break;
+    };
+    if (usageWindow_ != nullptr) {
+        usageWindow_->render();
+    }
+}
+
+} // namespace s3r
+} // namespace mixi

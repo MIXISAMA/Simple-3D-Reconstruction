@@ -1,18 +1,26 @@
-#ifndef _CAMERA_WINDOW_H
-#define _CAMERA_WINDOW_H
+#pragma once
 
+#include "pch.h"
 #include "app/imgui_window.h"
-#include "util/my_usb_camera.h"
+
+#include "render/texture.h"
+
+namespace mixi
+{
+namespace s3r
+{
 
 class CameraWindow : public ImguiWindow
 {
 public:
     CameraWindow();
-    void init() override;
     void render() override;
-    void destroy() override;
 private:
-    GLuint frameTexture_;
+    Texture cameraTexture_;
+    void renderOriginalCamera_();
 };
 
-#endif
+    
+} // namespace s3r   
+} // namespace mixi
+

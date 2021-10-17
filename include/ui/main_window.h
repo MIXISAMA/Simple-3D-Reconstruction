@@ -1,24 +1,30 @@
-#ifndef _MAIN_WINDOW_H
-#define _MAIN_WINDOW_H
+#pragma once
 
 #include "pch.h"
 #include "app/imgui_window.h"
-#include "ui/calibration_window.h"
-#include "ui/camera_window.h"
+#include "ui/usage_selector_window.h"
+#include "ui/workspace_window.h"
+
+
+namespace mixi
+{
+namespace s3r // Simple 3D Reconstruction
+{
 
 class MainWindow : public ImguiWindow
 {
 public:
     MainWindow();
-    void init() override;
     void render() override;
-    void destroy() override;
 private:
-    Texture menuBtnTexCalibration;
-    Texture menuBtnTexCamera;
-    CalirationWindow calirationWindow;
-    CameraWindow cameraWindow;
-    ImguiWindow* currentWindow;
+    UsageSelectorWindow usageSelectorWindow_;
+    WorkspaceWindow workspaceWindow_;
+    ImguiWindow::Ptr usageWindow_;
+    void renderUsageWindow_();
 };
 
-#endif
+
+}
+}
+
+

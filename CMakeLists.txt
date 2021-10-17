@@ -21,14 +21,15 @@ aux_source_directory(src MAIN_SRC_DIR)
 aux_source_directory(src/app APP_SRC_DIR)
 aux_source_directory(src/ui UI_SRC_DIR)
 aux_source_directory(src/util UTIL_SRC_DIR)
+aux_source_directory(src/render RENDER_SRC_DIR)
 
 set(SOURCE_LIST
     ${MAIN_SRC_DIR}
     ${APP_SRC_DIR}
     ${UI_SRC_DIR}
     ${UTIL_SRC_DIR}
+    ${RENDER_SRC_DIR}
 )
-
 
 if(APPLE)
     # Get a list of all of the files in the data-folder.
@@ -97,6 +98,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC 3rdparty/stb
     PUBLIC 3rdparty/imgui/include
     PUBLIC 3rdparty/imgui-filebrowser
+    PUBLIC 3rdparty/glm
     PUBLIC ${3RD_PARTY_DIR}/glfw-src/include
     PUBLIC ${3RD_PARTY_DIR}/glog-build
     PUBLIC ${3RD_PARTY_DIR}/glog-src/src

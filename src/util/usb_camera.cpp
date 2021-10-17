@@ -1,6 +1,9 @@
-#include "util/my_usb_camera.h"
+#include "util/usb_camera.h"
 
-MyUsbCamera::MyUsbCamera() :
+namespace mixi
+{
+
+UsbCamera::UsbCamera() :
     context_(nullptr),
     device_(nullptr),
     handle_(nullptr),
@@ -11,37 +14,22 @@ MyUsbCamera::MyUsbCamera() :
     height_(480),
     fps_(30),
     terminalId_(0),
-    isStarting_(false),
-    isFound_(false),
-    isExited_(true),
+    status_(Status::UNINITIALIZED),
     frameCounter_(0)
 {
 
 }
 
-MyUsbCamera::~MyUsbCamera()
+UsbCamera::~UsbCamera()
 {
-    exit();
+    exit_();
 }
 
-MyUsbCamera::usbCam_ptr MyUsbCamera::Instance_ = nullptr;
-std::mutex MyUsbCamera::Instance_mutex_;
-
-MyUsbCamera::usbCam_ptr MyUsbCamera::Instance()
+void UsbCamera::init_()
 {
-    if(Instance_ == nullptr){
-        std::lock_guard<std::mutex> lk(Instance_mutex_);
-        if(Instance_ == nullptr){
-            Instance_ = std::shared_ptr<MyUsbCamera>(new MyUsbCamera());
-        }
+    if (status_ != Status::UNINITIALIZED) {
+        return;
     }
-    return Instance_;
-}
-
-void MyUsbCamera::init()
-{
-    stop();
-    exit();
 
     uvc_error_t res;
 
@@ -52,10 +40,9 @@ void MyUsbCamera::init()
 
     res = uvc_find_device(context_, &device_, 0, 0, NULL);
     if (res != UVC_SUCCESS) {
-        isFound_ = false;
+        status_ = Status::NOT_FOUND;
         return;
     }
-    isFound_ = true;
 
     res = uvc_open(device_, &handle_);
     if (res != UVC_SUCCESS) {
@@ -89,72 +76,84 @@ void MyUsbCamera::init()
         }
     }
 
+    outputFrameRgb_ = uvc_allocate_frame(width_ * height_ * 3);
+
     const uvc_input_terminal_t* input_terminal = uvc_get_camera_terminal(handle_);
     terminalId_ = input_terminal->bTerminalID;
 
-    isExited_ = false;
-    frameCounter_ = 0;
-}
-
-void MyUsbCamera::exit()
-{
-    if (isExited_) {
-        return;
-    }
-
-    uvc_close(handle_);
-    uvc_unref_device(device_);
-    uvc_exit(context_);
-    for (int i = 0; i < 2; i++) {
-        uvc_free_frame(frameRgb_[i]);
-        frameRgb_[i] = nullptr;
-    }
-
-    isExited_ = true;
-}
-
-void MyUsbCamera::refresh()
-{
-    init();
-    exit();
-}
-
-void MyUsbCamera::start()
-{
-    init();
-    if (!isFound_) {
-        return;
-    }
-
-    uvc_error_t res = uvc_get_stream_ctrl_format_size(
+    res = uvc_get_stream_ctrl_format_size(
         handle_, &ctrl_, frameFormat_, width_, height_, fps_);
     if (res != UVC_SUCCESS) {
         throw std::runtime_error("device doesn't provide a matching stream");
     }
 
-    res = uvc_start_streaming(handle_, &ctrl_, CameraFrameCallback, this, 0);
+    status_ = Status::NOT_STARTED;
+    frameCounter_ = 0;
+}
+
+void UsbCamera::exit_()
+{
+    if (status_ == Status::UNINITIALIZED) {
+        return;
+    }
+
+    if (status_ == Status::STARTING) {
+        stop();
+    }
+    if (status_ == Status::NOT_STARTED) {
+        uvc_close(handle_);
+        uvc_unref_device(device_);
+        for (int i = 0; i < 2; i++) {
+            uvc_free_frame(frameRgb_[i]);
+            frameRgb_[i] = nullptr;
+        }
+        uvc_free_frame(outputFrameRgb_);
+    }
+
+    uvc_exit(context_);
+
+    status_ = Status::UNINITIALIZED;
+}
+
+void UsbCamera::refresh()
+{
+    exit_();
+    init_();
+}
+
+void UsbCamera::start()
+{
+    if (status_ == Status::STARTING) {
+        return;
+    }
+
+    if (status_ != Status::NOT_STARTED) {
+        throw std::runtime_error("camera has not initialized or found");
+    }
+
+    uvc_error_t res = uvc_start_streaming(handle_, &ctrl_, CameraFrameCallback_, this, 0);
     if (res != UVC_SUCCESS) {
         throw std::runtime_error("uvc can not start streaming");
     }
 
-    uvc_set_ae_mode(handle_, 1); /* e.g., turn on auto exposure */
+    // uvc_set_ae_mode(handle_, 1); /* e.g., turn on auto exposure */
 
-    isStarting_ = true;
+    status_ = Status::STARTING;
 }
 
-void MyUsbCamera::stop()
+void UsbCamera::stop()
 {
-    if (!isStarting_) {
+    if (status_ != Status::STARTING) {
         return;
     }
+
     uvc_stop_streaming(handle_);
-    isStarting_ = false;
-    exit();
+    status_ = Status::NOT_STARTED;
 }
 
-void MyUsbCamera::CameraFrameCallback(uvc_frame* frame, void* camera)
+void UsbCamera::CameraFrameCallback_(uvc_frame* frame, void* camera)
 {
-    MyUsbCamera* cam = (MyUsbCamera*)camera;
+    UsbCamera* cam = (UsbCamera*)camera;
     if (cam->frameCounter_++ == 0) {
         return;
     }
@@ -180,39 +179,29 @@ void MyUsbCamera::CameraFrameCallback(uvc_frame* frame, void* camera)
     cam->currentFrameRgb_mutex_.unlock();
 }
 
-void MyUsbCamera::loadFrameRgb(GLuint* frameTexture)
+const void* UsbCamera::fetchFrameRgbData()
 {
-    if (!isStarting_) {
-        // Todo: default image
-        return;
+    if (status_ != Status::STARTING) {
+        throw std::runtime_error("fetch frame but camera is not starting");
     }
-
-    if (frameCounter_ <= 2) {
-        return;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, *frameTexture);
-
-#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
 
     currentFrameRgb_mutex_.lock_shared();
-    uvc_frame_t* frameRgb = frameRgb_[currentFrameRgb_];
-    if (frameRgb != nullptr) {
-        glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGB,
-            frameRgb->width, frameRgb->height, 0,
-            GL_RGB, GL_UNSIGNED_BYTE, frameRgb->data
-        );
-    }
+    uvc_duplicate_frame(frameRgb_[currentFrameRgb_], outputFrameRgb_);
     currentFrameRgb_mutex_.unlock_shared();
-
-    glBindTexture(GL_TEXTURE_2D, 0);
+    return outputFrameRgb_;
 }
 
-MyUsbCamera::Info MyUsbCamera::getRecentInfo() const
+long long UsbCamera::getFrameCounter()
 {
+    return frameCounter_;
+}
+
+UsbCamera::Info UsbCamera::getRecentInfo() const
+{
+    if (status_ == Status::UNINITIALIZED ||
+        status_ == Status::NOT_FOUND) {
+        throw std::runtime_error("get recent info but camera is not initialized or found");
+    }
     return {
         width_,
         height_,
@@ -221,12 +210,11 @@ MyUsbCamera::Info MyUsbCamera::getRecentInfo() const
     };
 }
 
-bool MyUsbCamera::isStarting() const
+UsbCamera::Status UsbCamera::getStatus() const
 {
-    return isStarting_;
+    return status_;
 }
 
-bool MyUsbCamera::isFound() const
-{
-    return isFound_;
-}
+
+} // namespace mixi
+
