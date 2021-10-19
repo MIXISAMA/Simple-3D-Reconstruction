@@ -10,14 +10,20 @@ namespace mixi
 namespace s3r
 {
 
-class CameraWindow : public ImguiWindow
+class CameraWindow : public app::ImguiWindow
 {
 public:
+
     CameraWindow();
+
     void render() override;
+
 private:
+
     Texture cameraTexture_;
+
     void renderOriginalCamera_();
+
 };
 
     

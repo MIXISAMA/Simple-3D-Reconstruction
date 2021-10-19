@@ -15,8 +15,11 @@ public:
     void unbind() const;
 
     GLuint rbo() const;
+
 protected:
+
     GLuint rbo_;
+
 private:
 
 };

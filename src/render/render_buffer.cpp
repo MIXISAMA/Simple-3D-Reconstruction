@@ -13,6 +13,11 @@ RenderBuffer::RenderBuffer(int width, int height) :
     unbind();
 }
 
+RenderBuffer::~RenderBuffer()
+{
+    glDeleteRenderbuffers(1, &rbo_);
+}
+
 void RenderBuffer::bind() const
 {
     glBindRenderbuffer(GL_RENDERBUFFER, rbo_); 

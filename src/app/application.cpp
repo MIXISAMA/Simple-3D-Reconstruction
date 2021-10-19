@@ -2,40 +2,33 @@
 
 namespace mixi
 {
-
 namespace app
 {
 
-Glog::Glog(const char* arg, const char* log_dir)
+Application::Glog::Glog(const char* arg, const char* log_dir)
 {
     FLAGS_log_dir = log_dir;
     google::InitGoogleLogging(arg);
 }
 
-Glog::~Glog()
+Application::Glog::~Glog()
 {
     google::ShutdownGoogleLogging();
 }
 
-Glfw::Glfw()
+Application::Glfw::Glfw()
 {
     glfwSetErrorCallback(ErrorCallback_);
     if (!glfwInit()) {
         throw std::runtime_error("glfw init error!");
     }
 
-#if defined(__APPLE__)
-    // GL 3.2 + GLSL 150
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+
+#if defined(__APPLE__)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
-#else
-    // GL 3.0 + GLSL 130
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 
     glfwWindow_ = (GLFWwindow*)glfwCreateWindow(1280, 720, "Simple 3D Reconstruction", NULL, NULL);
@@ -49,19 +42,22 @@ Glfw::Glfw()
         throw std::runtime_error("Failed to initialize GLAD!");
     }
     glfwSwapInterval(1); // Enable vsync
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 }
 
-Glfw::~Glfw()
+Application::Glfw::~Glfw()
 {
     glfwTerminate();
 }
 
-GLFWwindow* Glfw::glfwWindow() const
+GLFWwindow* Application::Glfw::glfwWindow() const
 {
     return glfwWindow_;
 }
 
-void Glfw::preRender() const
+void Application::Glfw::preRender() const
 {
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     int display_w, display_h;
@@ -71,43 +67,45 @@ void Glfw::preRender() const
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Glfw::postRender() const
+void Application::Glfw::postRender() const
 {
     glfwPollEvents();
     glfwSwapBuffers(glfwWindow_);
 }
 
-void Glfw::ErrorCallback_(int error, const char* description)
+void Application::Glfw::ErrorCallback_(int error, const char* description)
 {
     LOG(ERROR) << "Glfw Error " << error << ": " << description;
 }
 
 
-Imgui::Imgui(GLFWwindow* glfwWindow)
+Application::Imgui::Imgui(GLFWwindow* glfwWindow)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    io.ConfigWindowsMoveFromTitleBarOnly=true;
     ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
 #if defined(__APPLE__)
-    // GL 3.2 + GLSL 150
+    // GL 3.3 + GLSL 150
     const char* glsl_version = "#version 150";
 #else
-    // GL 3.0 + GLSL 130
+    // GL 3.3 + GLSL 130
     const char* glsl_version = "#version 130";
 #endif
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-Imgui::~Imgui()
+Application::Imgui::~Imgui()
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
 
-void Imgui::preRender() const
+void Application::Imgui::preRender() const
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -136,7 +134,7 @@ void Imgui::preRender() const
     ImGui::End();
 }
 
-void Imgui::postRender() const
+void Application::Imgui::postRender() const
 {
     ImGui::Render();
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -180,6 +178,6 @@ bool Application::shouldClose_() const
 }
 
 
-} 
-}
+} // namespace app
+} // namespace mixi
 

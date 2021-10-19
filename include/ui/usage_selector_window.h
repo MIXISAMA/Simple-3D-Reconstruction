@@ -10,7 +10,7 @@ namespace mixi
 namespace s3r
 {
 
-class UsageSelectorWindow : public ImguiWindow
+class UsageSelectorWindow : public app::ImguiWindow
 {
 public:
 

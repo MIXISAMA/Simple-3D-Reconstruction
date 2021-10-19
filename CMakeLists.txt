@@ -22,6 +22,7 @@ aux_source_directory(src/app APP_SRC_DIR)
 aux_source_directory(src/ui UI_SRC_DIR)
 aux_source_directory(src/util UTIL_SRC_DIR)
 aux_source_directory(src/render RENDER_SRC_DIR)
+aux_source_directory(src/element ELEMENT_SRC_DIR)
 
 set(SOURCE_LIST
     ${MAIN_SRC_DIR}
@@ -29,11 +30,14 @@ set(SOURCE_LIST
     ${UI_SRC_DIR}
     ${UTIL_SRC_DIR}
     ${RENDER_SRC_DIR}
+    ${ELEMENT_SRC_DIR}
 )
 
 if(APPLE)
     # Get a list of all of the files in the data-folder.
-    file(GLOB_RECURSE RES_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*")
+    file(GLOB_RECURSE RES_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/resource/*"
+    )
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         ${SOURCE_LIST}
         ${RES_SOURCES}
@@ -52,17 +56,17 @@ if(APPLE)
     # Individually set the file's path properties.
     foreach (FILE ${RES_SOURCES})
         # Get the relative path from the data-folder to the particular file.
-        file(RELATIVE_PATH NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}/assets" ${FILE})
+        file(RELATIVE_PATH NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resource" ${FILE})
 
         # Get the relative path to the file.
         get_filename_component(NEW_FILE_PATH ${NEW_FILE} DIRECTORY)
 
         # Set it's location inside the app package (under Resources).
-        set_property(SOURCE ${FILE} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/assets/${NEW_FILE_PATH}")
+        set_property(SOURCE ${FILE} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/${NEW_FILE_PATH}")
 
         # Optional: Add the file to the 'Resources' folder group in Xcode.
         #           This also preserves folder structure.
-        source_group("Resources/assets/${NEW_FILE_PATH}" FILES "${FILE}")
+        source_group("Resources/${NEW_FILE_PATH}" FILES "${FILE}")
     endforeach ()
 
 else()

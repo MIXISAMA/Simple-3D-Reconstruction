@@ -75,7 +75,7 @@ void CameraWindow::renderOriginalCamera_()
         cameraTexture_.updateRgbImage2D(cameraInfo.width, cameraInfo.height, data);
         int height = 300;
         int width = cameraInfo.width * 300.0 / cameraInfo.height;
-        ImGui::Image((void*)(intptr_t)cameraTexture_.getTextureId(), ImVec2(width, height));
+        ImGui::Image((void*)(intptr_t)cameraTexture_.id(), ImVec2(width, height));
     }
 
 }

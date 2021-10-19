@@ -7,7 +7,7 @@ namespace mixi
 {
 namespace s3r
 {
-class WorkspaceWindow : public ImguiWindow
+class WorkspaceWindow : public app::ImguiWindow
 {
 public:
     WorkspaceWindow();

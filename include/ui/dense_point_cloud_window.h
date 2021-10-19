@@ -7,11 +7,16 @@ namespace mixi
 {
 namespace s3r
 {
-class DensePointCloudWindow : public ImguiWindow
+
+class DensePointCloudWindow : public app::ImguiWindow
 {
+
 public:
+
     DensePointCloudWindow();
+
     void render() override;
+
 };
 
 }

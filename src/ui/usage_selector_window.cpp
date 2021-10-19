@@ -56,7 +56,7 @@ void UsageSelectorWindow::render()
         ImGui::PushID(i);
 
         bool click = ImGui::ImageButton(
-            (void*)(intptr_t)item.texture->getTextureId(),
+            (void*)(intptr_t)item.texture->id(),
             ImVec2(64, 64)
         );
         if (click) {

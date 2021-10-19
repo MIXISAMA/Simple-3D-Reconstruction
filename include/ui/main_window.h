@@ -11,7 +11,7 @@ namespace mixi
 namespace s3r // Simple 3D Reconstruction
 {
 
-class MainWindow : public ImguiWindow
+class MainWindow : public app::ImguiWindow
 {
 public:
     MainWindow();

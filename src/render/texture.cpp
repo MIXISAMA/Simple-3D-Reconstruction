@@ -43,17 +43,17 @@ void Texture::updateRgbImage2D(GLsizei width, GLsizei height, const void* data)
     updateImage2D(width, height, data, GL_RGB);
 }
 
-void Texture::bind()
+void Texture::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, to_);
 }
 
-void Texture::unbind()
+void Texture::unbind() const
 {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-GLuint Texture::getTextureId()
+GLuint Texture::id() const
 {
     return to_;
 }

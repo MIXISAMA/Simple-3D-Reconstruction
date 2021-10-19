@@ -10,6 +10,8 @@ class VertexArray
 {
 public:
 
+    using Ptr = std::shared_ptr<VertexArray>;
+
     VertexArray(void* data, GLsizeiptr dataSize, std::vector<GLint>& attributeNumbers);
     ~VertexArray();
 

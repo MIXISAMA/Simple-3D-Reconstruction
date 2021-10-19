@@ -9,6 +9,7 @@
 #include <exception>
 #include <shared_mutex>
 #include <filesystem>
+#include <fstream>
 #include <cstdint>
 #include <atomic>
 
@@ -22,6 +23,10 @@
 #include "imgui_impl_opengl3.h"
 
 #include "glm/vec3.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtx/string_cast.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 
 namespace mixi

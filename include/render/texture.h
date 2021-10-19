@@ -15,13 +15,13 @@ public:
     Texture();
     ~Texture();
 
-    void bind();
-    void unbind();
+    void bind() const;
+    void unbind() const;
 
     void updateRgbaImage2D(GLsizei width, GLsizei height, const void* data);
     void updateRgbImage2D(GLsizei width, GLsizei height, const void* data);
 
-    GLuint getTextureId();
+    GLuint id() const;
 
 protected:
 

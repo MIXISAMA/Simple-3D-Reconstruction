@@ -1,9 +1,0 @@
-#pragma
-
-
-namespace mixi
-{
-
-
-
-}

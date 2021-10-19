@@ -11,19 +11,23 @@ VertexArray::VertexArray(void* data, GLsizeiptr dataSize, std::vector<GLint>& at
     glGenVertexArrays(1, &vao_);
 
     bind();
-    GLuint relativeOffset = 0;
-    for (int i = 0; i < attributeNumbers.size(); i++) {
 
-        glEnableVertexAttribArray(i);
-
-        GLint number = attributeNumbers[i];
-        glVertexAttribFormat(i, number, GL_FLOAT, GL_FALSE, relativeOffset);
-        relativeOffset += number * sizeof(float);
-
-        glVertexAttribBinding(i, 0);
-
+    GLsizei stride = 0;
+    for (GLint number : attributeNumbers) {
+        stride += number * sizeof(float);
     }
-    glBindVertexBuffer(0, vertexBuffer_.vbo(), 0, relativeOffset);
+
+    vertexBuffer_.bind();
+    int relativeOffset = 0;
+    for (int i = 0; i < attributeNumbers.size(); i++) {
+        GLint number = attributeNumbers[i];
+        const void* pointer = (const void*)(size_t)relativeOffset;
+        glVertexAttribPointer(i, number, GL_FLOAT, GL_FALSE, stride, pointer);
+        glEnableVertexAttribArray(i);
+        relativeOffset += number * sizeof(float);
+    }
+    vertexBuffer_.unbind();
+
     vertexCount_ = dataSize / relativeOffset;
     unbind();
 }
@@ -45,7 +49,9 @@ void VertexArray::unbind() const
 
 void VertexArray::draw(GLenum mode) const
 {
+    bind();
     glDrawArrays(mode, 0, vertexCount_);
+    unbind();
 }
 
 } // namespace mixi
