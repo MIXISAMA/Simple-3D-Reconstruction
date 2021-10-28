@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pch.h"
+#include "file_util.h"
 
 namespace mixi
 {
@@ -9,24 +10,23 @@ class Image
 {
 public:
 
-    Image(const char* filePath);
-    Image(int width, int height, int bytes, void* data);
+    using Ptr = std::shared_ptr<Image>;
+
+    Image(const fs::path& filepath);
+    Image(int width, int height, int bytes, int comp, void* data);
     ~Image();
 
-    int width();
-    int height();
-    const void* data();
+    int width() const;
+    int height() const;
+    const void* data() const;
 
     void invertedColor();
     
-    void saveToPngFile(const char* filePath);
+    void saveToPngFile(const fs::path& filepath);
 
 protected:
 
     Image();
-
-    void loadFromFile(const char* filePath);
-    void loadFromMemory(int width, int height, int bytes, void* data);
 
     int width_;
     int height_;
@@ -34,5 +34,24 @@ protected:
     void* data_;
 
 };
+
+class ImageFile : public MemoryFile
+{
+public:
+
+    ImageFile(fs::path& filepath);
+    ImageFile(fs::path& filename, Image::Ptr& image);
+
+    ~ImageFile() = default;
+
+    void save(const fs::path& parentPath) const override;
+    Image::Ptr image() const;
+
+protected:
+
+    Image::Ptr image_;
+
+};
+
 
 }

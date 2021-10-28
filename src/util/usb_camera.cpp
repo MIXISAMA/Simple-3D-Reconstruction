@@ -131,7 +131,9 @@ void UsbCamera::start()
         throw std::runtime_error("camera has not initialized or found");
     }
 
-    uvc_error_t res = uvc_start_streaming(handle_, &ctrl_, CameraFrameCallback_, this, 0);
+    uvc_error_t res = uvc_start_streaming(
+        handle_, &ctrl_, CameraFrameCallback_, this, 0
+    );
     if (res != UVC_SUCCESS) {
         throw std::runtime_error("uvc can not start streaming");
     }
@@ -179,7 +181,7 @@ void UsbCamera::CameraFrameCallback_(uvc_frame* frame, void* camera)
     cam->currentFrameRgb_mutex_.unlock();
 }
 
-const void* UsbCamera::fetchFrameRgbData()
+const uvc_frame_t* UsbCamera::fetchFrameRgb()
 {
     if (status_ != Status::STARTING) {
         throw std::runtime_error("fetch frame but camera is not starting");
@@ -200,14 +202,11 @@ UsbCamera::Info UsbCamera::getRecentInfo() const
 {
     if (status_ == Status::UNINITIALIZED ||
         status_ == Status::NOT_FOUND) {
-        throw std::runtime_error("get recent info but camera is not initialized or found");
+        throw std::runtime_error(
+            "get recent info but camera is not initialized or found"
+        );
     }
-    return {
-        width_,
-        height_,
-        fps_,
-        terminalId_
-    };
+    return {width_, height_, fps_, terminalId_};
 }
 
 UsbCamera::Status UsbCamera::getStatus() const

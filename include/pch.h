@@ -1,10 +1,13 @@
 #pragma once
 
+#include <ctime>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <memory>
 #include <exception>
 #include <shared_mutex>
@@ -27,6 +30,12 @@
 #include "glm/gtx/string_cast.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+
+#include <opencv2/core.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 
 
 namespace mixi

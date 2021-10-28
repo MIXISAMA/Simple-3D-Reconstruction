@@ -6,15 +6,18 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(3rdparty/glad)
 add_subdirectory(3rdparty/glfw)
 add_subdirectory(3rdparty/imgui)
+# add_subdirectory(3rdparty/ImGuiFileDialog)
 # add_subdirectory(3rdparty/opencv)
 add_subdirectory(3rdparty/gflags)
 add_subdirectory(3rdparty/glog)
 # add_subdirectory(3rdparty/eigen)
 # add_subdirectory(3rdparty/CGAL)
 # add_subdirectory(3rdparty/vcg)
+find_package(OpenCV REQUIRED)
 find_package(OpenMVG REQUIRED)
 
 add_dependencies(imgui glfw)
+# add_dependencies(ImGuiFileDialog imgui)
 add_dependencies(glog gflags)
 
 aux_source_directory(src MAIN_SRC_DIR)
@@ -23,6 +26,7 @@ aux_source_directory(src/ui UI_SRC_DIR)
 aux_source_directory(src/util UTIL_SRC_DIR)
 aux_source_directory(src/render RENDER_SRC_DIR)
 aux_source_directory(src/element ELEMENT_SRC_DIR)
+aux_source_directory(src/process PROCESS_SRC_DIR)
 
 set(SOURCE_LIST
     ${MAIN_SRC_DIR}
@@ -31,6 +35,7 @@ set(SOURCE_LIST
     ${UTIL_SRC_DIR}
     ${RENDER_SRC_DIR}
     ${ELEMENT_SRC_DIR}
+    ${PROCESS_SRC_DIR}
 )
 
 if(APPLE)
@@ -102,12 +107,14 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC 3rdparty/stb
     PUBLIC 3rdparty/imgui/include
     PUBLIC 3rdparty/imgui-filebrowser
+    # PUBLIC 3rdparty/ImGuiFileDialog
     PUBLIC 3rdparty/glm
     PUBLIC ${3RD_PARTY_DIR}/glfw-src/include
     PUBLIC ${3RD_PARTY_DIR}/glog-build
     PUBLIC ${3RD_PARTY_DIR}/glog-src/src
     PUBLIC ${3RD_PARTY_DIR}/gflags-build/include
     PUBLIC include
+    PUBLIC ${OpenCV_INCLUDE_DIRS}
     PUBLIC ${OPENMVG_INCLUDE_DIRS}
     PUBLIC ${libuvc_INCLUDE_DIRS}
 )
@@ -116,6 +123,7 @@ target_include_directories(${PROJECT_NAME}
 target_link_directories(${PROJECT_NAME}
     PUBLIC build/3rdparty/glad
     PUBLIC build/3rdparty/imgui
+    # PUBLIC build/3rdparty/ImGuiFileDialog
     PUBLIC ${3RD_PARTY_DIR}/glfw-build/src
     PUBLIC ${3RD_PARTY_DIR}/glog-build
     PUBLIC ${3RD_PARTY_DIR}/gflags-build
@@ -135,7 +143,9 @@ target_link_libraries(${PROJECT_NAME}
     glad
     glfw3
     imgui
+    # ImGuiFileDialog
     glogd
+    ${OpenCV_LIBS}
     ${OPENMVG_LIBRARIES}
     ${gflags_OUTPUT_NAME}_debug
     ${libuvc_LIBRARIES}

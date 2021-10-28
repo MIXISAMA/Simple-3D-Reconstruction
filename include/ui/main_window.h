@@ -2,8 +2,9 @@
 
 #include "pch.h"
 #include "app/imgui_window.h"
-#include "ui/usage_selector_window.h"
-#include "ui/workspace_window.h"
+#include "usage_selector_window.h"
+#include "workspace_window.h"
+#include "output_file_window.h"
 
 
 namespace mixi
@@ -17,6 +18,7 @@ public:
     MainWindow();
     void render() override;
 private:
+    OutputFileWindow outputFileWindow_;
     UsageSelectorWindow usageSelectorWindow_;
     WorkspaceWindow workspaceWindow_;
     ImguiWindow::Ptr usageWindow_;

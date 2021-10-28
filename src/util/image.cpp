@@ -18,16 +18,20 @@ Image::Image() :
 
 }
 
-Image::Image(const char* filePath) :
+Image::Image(const fs::path& filepath) :
     Image()
 {
-    loadFromFile(filePath);
+    data_ = stbi_load(filepath.c_str(), &width_, &height_, &comp_, 4);
 }
 
-Image::Image(int width, int height, int bytes, void* data) :
-    Image()
+Image::Image(int width, int height, int bytes, int comp, void* data) :
+    width_(width),
+    height_(height),
+    comp_(comp),
+    data_(nullptr)
 {
-    loadFromMemory(width, height, bytes, data);
+    data_ = malloc(bytes);
+    memcpy(data_, data, bytes);
 }
 
 Image::~Image()
@@ -35,15 +39,6 @@ Image::~Image()
     stbi_image_free(data_);
 }
 
-void Image::loadFromFile(const char* filePath)
-{
-    data_ = stbi_load(filePath, &width_, &height_, NULL, 4);
-}
-
-void Image::loadFromMemory(int width, int height, int bytes, void* data)
-{
-    stbi_load_from_memory((const stbi_uc *)data_, bytes, &width, &height, nullptr, 4);
-}
 
 void Image::invertedColor()
 {
@@ -52,24 +47,50 @@ void Image::invertedColor()
     }
 }
 
-int Image::width()
+int Image::width() const
 {
     return width_;
 }
 
-int Image::height()
+int Image::height() const
 {
     return height_;
 }
 
-const void* Image::data()
+const void* Image::data() const
 {
     return data_;
 }
 
-void Image::saveToPngFile(const char* filePath)
+void Image::saveToPngFile(const fs::path& filepath)
 {
-    stbi_write_png(filePath, width_, height_, comp_, data_, 0);
+    stbi_write_png(filepath.c_str(), width_, height_, comp_, data_, 0);
+}
+
+
+ImageFile::ImageFile(fs::path& filepath) :
+    MemoryFile(filepath.filename()),
+    image_(new Image(filepath))
+{
+
+}
+
+ImageFile::ImageFile(fs::path& filename, Image::Ptr& image) :
+    MemoryFile(filename),
+    image_(image)
+{
+
+}
+
+Image::Ptr ImageFile::image() const
+{
+    return image_;
+}
+
+void ImageFile::save(const fs::path& parentPath) const
+{
+    fs::path filepath(parentPath / filename_);
+    image_->saveToPngFile(filepath);
 }
 
 

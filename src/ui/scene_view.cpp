@@ -81,12 +81,14 @@ void SceneView::adjustCamera()
 
     if (ImGui::IsMouseDown(0)) { // Mouse left button down.
         camera_.moveUp(io.MouseDelta.y);
-        camera_.moveRight(io.MouseDelta.x);
+        camera_.moveLeft(io.MouseDelta.x);
     }
+
     if (ImGui::IsMouseDown(1)) { // Mouse right button down.
         camera_.yawRight(io.MouseDelta.x);
         camera_.pitchUp(io.MouseDelta.y);
     }
+
     camera_.moveForward(io.MouseWheel);
 }
 

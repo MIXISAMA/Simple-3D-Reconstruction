@@ -10,6 +10,7 @@ namespace s3r
 {
 
 MainWindow::MainWindow() :
+    outputFileWindow_(),
     usageSelectorWindow_(),
     workspaceWindow_(),
     usageWindow_(nullptr)
@@ -19,10 +20,9 @@ MainWindow::MainWindow() :
 
 void MainWindow::render()
 {
-    usageSelectorWindow_.render();
-
     workspaceWindow_.render();
-
+    outputFileWindow_.render();
+    usageSelectorWindow_.render();
     renderUsageWindow_();
 }
 
@@ -32,7 +32,9 @@ void MainWindow::renderUsageWindow_()
     {
     case UsageSelectorWindow::Usage::CAMERA:
         if(dynamic_cast<CameraWindow*>(usageWindow_.get()) == nullptr) {
-            usageWindow_ = ImguiWindow::Ptr(new CameraWindow());
+            usageWindow_ = ImguiWindow::Ptr(
+                new CameraWindow(outputFileWindow_.context())
+            );
         }
         break;
     case UsageSelectorWindow::Usage::SPARSE_POINT_CLOUD:

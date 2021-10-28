@@ -16,11 +16,15 @@ SparsePointCloudWindow::SparsePointCloudWindow() :
 
 }
 
-float points[12] = {
-     5.0,  5.0, 0,
-    -5.0, -5.0, 0,
-     0,    5.0, 0,
-     0, 0, 0,
+float points[] = {
+     5.0,    5.0,    5.0,
+     5.0,    5.0,   -5.0,
+     5.0,   -5.0,    5.0,
+     5.0,   -5.0,   -5.0,
+    -5.0,    5.0,    5.0,
+    -5.0,    5.0,   -5.0,
+    -5.0,   -5.0,    5.0,
+    -5.0,   -5.0,   -5.0,
 };
 
 void SparsePointCloudWindow::render()

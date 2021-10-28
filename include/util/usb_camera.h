@@ -8,14 +8,14 @@
 namespace mixi
 {
 
-class UsbCamera : Singleton<UsbCamera>
+class UsbCamera
 {
 public:
     
     using Ptr = std::shared_ptr<UsbCamera>;
 
     UsbCamera();
-    ~UsbCamera() override;
+    ~UsbCamera();
 
     struct Info {
         int width;
@@ -35,7 +35,7 @@ public:
     void refresh();
     void start();
     void stop();
-    const void* fetchFrameRgbData();
+    const uvc_frame_t* fetchFrameRgb();
     long long getFrameCounter();
     Info getRecentInfo() const;
     Status getStatus() const;
