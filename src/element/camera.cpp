@@ -9,12 +9,6 @@ const float Camera::MouseSensitivity_ = 0.1f;
 const float Camera::PitchMax_ = 89.0f;
 const float Camera::PitchMin_ = -89.0f;
 
-
-void printVec3(std::string name, glm::vec3& vec3)
-{
-    std::cout << name << " " << vec3.x << " " << vec3.y << " " << vec3.z << std::endl;
-}
-
 Camera::Camera(glm::vec3 position) :
     position_(position),
     front_(),
@@ -24,13 +18,6 @@ Camera::Camera(glm::vec3 position) :
     pitch_(0.0f)
 {
     updateCameraVectors();
-    printVec3("front", front_);
-    printVec3("up_", up_);
-    printVec3("right_", right_);
-    printVec3("position_", position_);
-
-    std::cout << "yaw " << yaw_ << std::endl;
-    std::cout << "pitch " << pitch_ << std::endl;
 }
 
 Camera::~Camera()
@@ -41,6 +28,11 @@ Camera::~Camera()
 glm::mat4 Camera::getViewMatrix() const
 {
     return glm::lookAt(position_, position_ + front_, up_);
+}
+
+glm::vec3 Camera::getViewPoint() const
+{
+    return position_;
 }
 
 void Camera::moveForward(float delta)

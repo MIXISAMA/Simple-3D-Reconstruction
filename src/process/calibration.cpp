@@ -6,8 +6,9 @@ namespace mixi
 Calibration::Calibration(
     int boardWidth,
     int boardHeight,
-    int squareSize,
-    Pattern pattern) :
+    float squareSize,
+    Pattern pattern
+) :
     boardWidth(boardWidth),
     boardHeight(boardHeight),
     squareSize(squareSize),
@@ -40,8 +41,10 @@ bool Calibration::findCornersFast(
             cv::CALIB_CB_NORMALIZE_IMAGE |
             cv::CALIB_CB_FAST_CHECK
         );
-    default:
-        return false;
+    case Pattern::CIRCLES_GRID:
+        return findCirclesGrid(image, patternSize, corners);
+    case Pattern::ASYMMETRIC_CIRCLES_GRID:
+        return findCirclesGrid(image, patternSize, corners, cv::CALIB_CB_ASYMMETRIC_GRID);
     }
 }
 
@@ -109,7 +112,6 @@ double Calibration::calibrate(std::vector<Image::Ptr>& images, cv::Mat& intrinsi
 
 bool Calibration::findCorners(const Image* image, std::vector<cv::Point2f>& corners)
 {
-    bool found = false;
     cv::Mat rbg = cv::Mat(
         image->height(),
         image->width(),
@@ -121,30 +123,29 @@ bool Calibration::findCorners(const Image* image, std::vector<cv::Point2f>& corn
     switch (pattern)
     {
     case Pattern::CHESSBOARD:
-        found = cv::findChessboardCorners(rbg, patternSize, corners);
-        break;
-    default:
-        return false;
+    {
+        bool found = cv::findChessboardCorners(rbg, patternSize, corners);
+        cv::Mat gray;
+        cvtColor(rbg, gray, cv::COLOR_BGR2GRAY);
+        cornerSubPix(
+            gray,
+            corners,
+            cv::Size(11, 11),
+            cv::Size(-1,-1),
+            cv::TermCriteria(
+                cv::TermCriteria::EPS |
+                cv::TermCriteria::COUNT,
+                30,
+                0.0001
+            )
+        );
+        return found;
     }
-    if (!found) {
-        return false;
+    case Pattern::CIRCLES_GRID:
+        return findCirclesGrid(rbg, patternSize, corners);
+    case Pattern::ASYMMETRIC_CIRCLES_GRID:
+        return findCirclesGrid(rbg, patternSize, corners, cv::CALIB_CB_ASYMMETRIC_GRID);
     }
-
-    cv::Mat gray;
-    cvtColor(rbg, gray, cv::COLOR_BGR2GRAY);
-    cornerSubPix(
-        gray,
-        corners,
-        cv::Size(11, 11),
-        cv::Size(-1,-1),
-        cv::TermCriteria(
-            cv::TermCriteria::EPS |
-            cv::TermCriteria::COUNT,
-            30,
-            0.0001
-        )
-    );
-    return true;
 }
 
 void Calibration::undistort(

@@ -20,7 +20,7 @@ public:
     Calibration(
         int boardWidth = 8,
         int boardHeight = 5,
-        int squareSize = 18,
+        float squareSize = 18.0f,
         Pattern pattern = Pattern::CHESSBOARD
     );
     ~Calibration();
@@ -30,7 +30,7 @@ public:
     int boardHeight;
 
     // The size of a square in some user defined metric system (pixel, millimeter)
-    int squareSize;
+    float squareSize;
 
     Pattern pattern;
 

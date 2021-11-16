@@ -8,17 +8,21 @@ add_subdirectory(3rdparty/glfw)
 add_subdirectory(3rdparty/imgui)
 # add_subdirectory(3rdparty/ImGuiFileDialog)
 # add_subdirectory(3rdparty/opencv)
-add_subdirectory(3rdparty/gflags)
-add_subdirectory(3rdparty/glog)
+# add_subdirectory(3rdparty/gflags)
+# add_subdirectory(3rdparty/glog)
 # add_subdirectory(3rdparty/eigen)
 # add_subdirectory(3rdparty/CGAL)
 # add_subdirectory(3rdparty/vcg)
+find_package(gflags REQUIRED)
+find_package(glog REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenMVG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(assimp REQUIRED)
 
 add_dependencies(imgui glfw)
 # add_dependencies(ImGuiFileDialog imgui)
-add_dependencies(glog gflags)
+# add_dependencies(glog gflags)
 
 aux_source_directory(src MAIN_SRC_DIR)
 aux_source_directory(src/app APP_SRC_DIR)
@@ -27,6 +31,8 @@ aux_source_directory(src/util UTIL_SRC_DIR)
 aux_source_directory(src/render RENDER_SRC_DIR)
 aux_source_directory(src/element ELEMENT_SRC_DIR)
 aux_source_directory(src/process PROCESS_SRC_DIR)
+aux_source_directory(src/component COMPONENT_SRC_DIR)
+aux_source_directory(src/view VIEW_SRC_DIR)
 
 set(SOURCE_LIST
     ${MAIN_SRC_DIR}
@@ -36,6 +42,8 @@ set(SOURCE_LIST
     ${RENDER_SRC_DIR}
     ${ELEMENT_SRC_DIR}
     ${PROCESS_SRC_DIR}
+    ${COMPONENT_SRC_DIR}
+    ${VIEW_SRC_DIR}
 )
 
 if(APPLE)
@@ -81,13 +89,12 @@ else()
 endif()
 
 
-add_dependencies(${PROJECT_NAME} glad glfw imgui gflags glog)
+add_dependencies(${PROJECT_NAME} glad glfw imgui)
 
 
 find_path(libuvc_INCLUDE_DIR libuvc/libuvc.h)
 find_library(libuvc_LIBRARY NAMES uvc)
-# message("wtf")
-# message(${libuvc_LIBRARY})
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(libuvc  DEFAULT_MSG
                                   libuvc_LIBRARY libuvc_INCLUDE_DIR)
@@ -100,8 +107,6 @@ set(libuvc_INCLUDE_DIRS ${libuvc_INCLUDE_DIR})
 
 set(3RD_PARTY_DIR build/_deps)
 
-
-
 target_include_directories(${PROJECT_NAME}
     PUBLIC 3rdparty/glad/include
     PUBLIC 3rdparty/stb
@@ -110,13 +115,17 @@ target_include_directories(${PROJECT_NAME}
     # PUBLIC 3rdparty/ImGuiFileDialog
     PUBLIC 3rdparty/glm
     PUBLIC ${3RD_PARTY_DIR}/glfw-src/include
-    PUBLIC ${3RD_PARTY_DIR}/glog-build
-    PUBLIC ${3RD_PARTY_DIR}/glog-src/src
-    PUBLIC ${3RD_PARTY_DIR}/gflags-build/include
+    # PUBLIC ${3RD_PARTY_DIR}/glog-build
+    # PUBLIC ${3RD_PARTY_DIR}/glog-src/src
+    # PUBLIC ${3RD_PARTY_DIR}/gflags-build/include
     PUBLIC include
+    PUBLIC ${gflags_INCLUDE_DIR}
+    # PUBLIC ${glog_INCLUDE_DIR}
     PUBLIC ${OpenCV_INCLUDE_DIRS}
     PUBLIC ${OPENMVG_INCLUDE_DIRS}
     PUBLIC ${libuvc_INCLUDE_DIRS}
+    PUBLIC ${Boost_INCLUDE_DIRS}
+    PUBLIC ${ASSIMP_INCLUDE_DIRS}
 )
 
 
@@ -125,30 +134,37 @@ target_link_directories(${PROJECT_NAME}
     PUBLIC build/3rdparty/imgui
     # PUBLIC build/3rdparty/ImGuiFileDialog
     PUBLIC ${3RD_PARTY_DIR}/glfw-build/src
-    PUBLIC ${3RD_PARTY_DIR}/glog-build
-    PUBLIC ${3RD_PARTY_DIR}/gflags-build
+    # PUBLIC ${3RD_PARTY_DIR}/glog-build
+    # PUBLIC ${3RD_PARTY_DIR}/gflags-build
     # PUBLIC ${libuvc_LIBRARIES}
+    PUBLIC ${ASSIMP_LIBRARY_DIRS}
 )
 
 # target_link_libraries(${PROJECT_NAME}
 #     ${gflags_LIBS}
 # )
 
-get_target_property(gflags_OUTPUT_NAME gflags OUTPUT_NAME)
-if (OS_WINDOWS)
-    set (gflags_OUTPUT_NAME ${gflags_OUTPUT_NAME}_static)
-endif ()
+# get_target_property(gflags_OUTPUT_NAME gflags OUTPUT_NAME)
+# if (OS_WINDOWS)
+#     set (gflags_OUTPUT_NAME ${gflags_OUTPUT_NAME}_static)
+# endif ()
 
 target_link_libraries(${PROJECT_NAME}
     glad
     glfw3
     imgui
+    # gflags
+    glog
     # ImGuiFileDialog
-    glogd
+    # glogd
+    ${gflags_LIBRARIES}
+    # ${glog_LIBRARIES}
     ${OpenCV_LIBS}
     ${OPENMVG_LIBRARIES}
-    ${gflags_OUTPUT_NAME}_debug
+    # ${gflags_OUTPUT_NAME}_debug
     ${libuvc_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${ASSIMP_LIBRARIES}
 )
 
 if (APPLE)

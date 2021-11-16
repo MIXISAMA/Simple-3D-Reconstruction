@@ -21,27 +21,42 @@ public:
     using Ptr = std::shared_ptr<SceneView>;
 
     SceneView(
-        int width, int height,
-        VertexArray* vertexArray_,
-        std::vector<Shader::Ptr>& shaders
+        const VertexArray* vertexArray_ = nullptr,
+        const Program* program_ = nullptr
     );
     ~SceneView();
 
     void render() override;
 
-    void resize(int width, int height);
+    void setVertexArray(const VertexArray* vertexArray);
+    void setInitTran(const glm::mat4& tran);
+    void setProgram(const Program* program);
 
-private:
+protected:
 
     int width_;
     int height_;
 
     Camera camera_;
     FrameBuffer::Ptr frameBuffer_;
-    Program program_;
-    VertexArray* vertexArray_;
+    
+    const VertexArray* vertexArray_;
+    const Program* program_;
 
-    void adjustCamera();
+    glm::mat4 projection_;
+    glm::mat4 view_;
+    glm::mat4 model_;
+
+    void resize_(int width, int height);
+
+    void adjustCamera_(float left, float down, float forward);
+    void adjustModel_(float rx, float ry);
+
+    virtual void onUseProgram_();
+
+    virtual void onAdjustModel_() = 0;
+
+    virtual void onAdjustCamera_() = 0;
 
 };
 

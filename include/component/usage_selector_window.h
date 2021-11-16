@@ -19,6 +19,9 @@ public:
         CAMERA,
         SPARSE_POINT_CLOUD,
         DENSE_POINT_CLOUD,
+        ROUGH_MESH,
+        REFINE_MESH,
+        TEXTURE_MESH,
     };
 
     UsageSelectorWindow();
@@ -29,7 +32,7 @@ public:
 
 private:
 
-    void addItem(
+    void addItem_(
         Usage usage,
         const char* tip,
         const char* imagePath,

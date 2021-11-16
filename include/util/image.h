@@ -39,8 +39,8 @@ class ImageFile : public MemoryFile
 {
 public:
 
-    ImageFile(fs::path& filepath);
-    ImageFile(fs::path& filename, Image::Ptr& image);
+    ImageFile(const fs::path& filepath);
+    ImageFile(const fs::path& filename, const Image::Ptr& image);
 
     ~ImageFile() = default;
 

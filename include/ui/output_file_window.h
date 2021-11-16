@@ -25,6 +25,7 @@ public:
         ~Context();
 
         void add(MemoryDirectory::Ptr& memoryDir);
+        void add(MemoryDirectory::Ptr& memoryDir, const std::string& name);
 
     protected:
 

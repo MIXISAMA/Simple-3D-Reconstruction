@@ -11,7 +11,7 @@ public:
 
     using Ptr = std::shared_ptr<Shader>;
 
-    Shader(fs::path& shaderPath, GLenum shaderType);
+    Shader(const fs::path& shaderPath, GLenum shaderType);
     ~Shader();
 
     Shader(const Shader&) = delete;
@@ -25,7 +25,7 @@ protected:
 
 private:
 
-    void compile(fs::path& shaderPath);
+    void compile(const fs::path& shaderPath);
     void checkCompileErrors();
 
 };

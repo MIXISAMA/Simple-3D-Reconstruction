@@ -19,6 +19,8 @@ public:
 
     void save(const fs::path& parentPath) const override;
 
+    std::string formatIntrinsics() const;
+
     cv::Mat intrinsic() const;
     cv::Mat distCoeffs() const;
 

@@ -1,4 +1,4 @@
-#include "ui/usage_selector_window.h"
+#include "component/usage_selector_window.h"
 
 #include "render/texture.h"
 #include "util/image.h"
@@ -11,31 +11,50 @@ namespace s3r
 UsageSelectorWindow::UsageSelectorWindow() :
     selected_(Usage::CAMERA)
 {
-    addItem(
+    addItem_(
         Usage::CAMERA,
         "Camera and Calibration",
         "assets/camera.png",
         true
     );
-    addItem(
+    addItem_(
         Usage::SPARSE_POINT_CLOUD,
         "Sparse Point Cloud",
         "assets/sparse_points.png",
         true
     );
-    addItem(
+    addItem_(
         Usage::DENSE_POINT_CLOUD,
         "Dense Point Cloud",
         "assets/dense_points.png",
         true
     );
+    addItem_(
+        Usage::ROUGH_MESH,
+        "Rough Mesh",
+        "assets/rough_mesh.png",
+        true
+    );
+    addItem_(
+        Usage::REFINE_MESH,
+        "Refine Mesh",
+        "assets/refine_mesh.png",
+        true
+    );
+    addItem_(
+        Usage::TEXTURE_MESH,
+        "Texture Mesh",
+        "assets/texture_mesh.png",
+        true
+    );
 }
 
-void UsageSelectorWindow::addItem(
+void UsageSelectorWindow::addItem_(
     Usage usage,
     const char* tip,
     const char* imagePath,
-    bool invertedColor)
+    bool invertedColor
+)
 {
     Image icon(imagePath);
     if (invertedColor) {

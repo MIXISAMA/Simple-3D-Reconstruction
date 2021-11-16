@@ -3,7 +3,7 @@
 namespace mixi
 {
 
-Shader::Shader(fs::path& shaderPath, GLenum shaderType) :
+Shader::Shader(const fs::path& shaderPath, GLenum shaderType) :
     id_(0)
 {
     id_ = glCreateShader(shaderType);
@@ -16,7 +16,7 @@ Shader::~Shader()
     glDeleteShader(id_);
 }
 
-void Shader::compile(fs::path& shaderPath)
+void Shader::compile(const fs::path& shaderPath)
 {
     std::string codeString;
     std::ifstream shaderFile;

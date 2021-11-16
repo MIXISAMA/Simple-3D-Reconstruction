@@ -68,14 +68,14 @@ void Image::saveToPngFile(const fs::path& filepath)
 }
 
 
-ImageFile::ImageFile(fs::path& filepath) :
+ImageFile::ImageFile(const fs::path& filepath) :
     MemoryFile(filepath.filename()),
     image_(new Image(filepath))
 {
 
 }
 
-ImageFile::ImageFile(fs::path& filename, Image::Ptr& image) :
+ImageFile::ImageFile(const fs::path& filename, const Image::Ptr& image) :
     MemoryFile(filename),
     image_(image)
 {

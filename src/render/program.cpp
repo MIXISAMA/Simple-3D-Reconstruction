@@ -4,10 +4,10 @@
 namespace mixi
 {
 
-Program::Program(std::vector<Shader::Ptr>& shaders)
+Program::Program(const std::vector<Shader*>& shaders)
 {
     id_ = glCreateProgram();
-    for (Shader::Ptr& shader : shaders) {
+    for (Shader* shader : shaders) {
         glAttachShader(id_, shader->id());
     }
     glLinkProgram(id_);
@@ -41,10 +41,16 @@ GLuint Program::id() const
     return id_;
 }
 
-void Program::setFloat(float v, const char* name) const
+void Program::setInt(int i, const char* name) const
 {
     GLint myLoc = glGetUniformLocation(id_, name);
-    glProgramUniform1f(id_, myLoc, v);
+    glProgramUniform1i(id_, myLoc, i);
+}
+
+void Program::setFloat(float f, const char* name) const
+{
+    GLint myLoc = glGetUniformLocation(id_, name);
+    glProgramUniform1f(id_, myLoc, f);
 }
 
 void Program::setVec3(float* vec3, const char* name) const

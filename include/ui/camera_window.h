@@ -36,6 +36,7 @@ private:
     CameraParameterFile::Ptr cameraParameterFile_;
 
     MemoryDirectory::Ptr imageOutputDir_;
+    MemoryDirectory::Ptr calibratedImageOutputDir_;
     MemoryDirectory::Ptr cameraParameterOutputDir_;
 
     Calibration calibration_;
@@ -67,7 +68,12 @@ private:
 
     void addCalibrationImagesMap_(const ISaveable::Ptr& saveable);
 
-    void outputShootImage_(Image::Ptr& image, fs::path& filename);
+    void outputShootImage_(
+        MemoryDirectory::Ptr& outputDir,
+        const std::string& defaultDirName,
+        const Image::Ptr& image,
+        const fs::path& filename
+    );
 
     void outputCameraParameter_(cv::Mat& intrinsic, cv::Mat& distCoeffs, fs::path& filename);
 

@@ -22,6 +22,21 @@ void OutputFileWindow::Context::add(MemoryDirectory::Ptr& memoryDir)
     dirs_.push_back(memoryDir);
 }
 
+void OutputFileWindow::Context::add(
+    MemoryDirectory::Ptr& memoryDir,
+    const std::string& name
+)
+{
+    char timeBuffer[50];
+    time_t now = time(0);
+    tm* localTime = localtime(&now);
+    strftime(timeBuffer, 50, " %Y-%m-%d %H:%M:%S", localTime);
+
+    fs::path dirname(name + timeBuffer);
+    memoryDir = MemoryDirectory::Ptr(new MemoryDirectory(dirname));
+    add(memoryDir);
+}
+
 OutputFileWindow::OutputFileWindow() :
     context_()
 {

@@ -5,8 +5,8 @@ namespace mixi
 
 CameraParameterFile::CameraParameterFile(fs::path& filepath) :
     MemoryFile(filepath.filename()),
-    intrinsic_(),
-    distCoeffs_()
+    intrinsic_(cv::Mat_<double>::zeros(3, 3)),
+    distCoeffs_(cv::Mat_<double>::zeros(1, 5))
 {
     cv::FileStorage xml(filepath, cv::FileStorage::READ);
     if (!xml.isOpened()) {
@@ -29,6 +29,21 @@ void CameraParameterFile::save(const fs::path& parentPath) const
     cv::FileStorage xml(parentPath / filename_, cv::FileStorage::WRITE);
     xml << "Intrinsic-Matrix" << intrinsic_;
     xml << "Distortion-Coefficients" << distCoeffs_;
+}
+
+std::string CameraParameterFile::formatIntrinsics() const
+{
+    std::ostringstream oss;
+    double* intrinsicData = (double*)intrinsic_.data;
+    for(int i = 0; i < intrinsic_.rows; i++){
+        for(int j = 0; j < intrinsic_.cols; j++){
+            if ( i != 0 || j != 0 ) {
+                oss << ";";
+            }
+            oss << intrinsicData[intrinsic_.rows * i + j];
+        }
+    }
+    return oss.str();
 }
 
 cv::Mat CameraParameterFile::intrinsic() const

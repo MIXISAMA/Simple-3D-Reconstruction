@@ -1,5 +1,7 @@
 #include "ui/scene_view.h"
 
+#include "util/ply.h"
+
 namespace mixi
 {
 
@@ -7,18 +9,24 @@ namespace s3r
 {
 
 SceneView::SceneView(
-    int width, int height,
-    VertexArray* vertexArray_,
-    std::vector<Shader::Ptr>& shaders
+    const VertexArray* vertexArray_,
+    const Program* program_
 ) :
-    width_(width),
-    height_(height),
+    width_(400),
+    height_(400),
     camera_(glm::vec3(0.0f, 0.0f, 100.0f)),
-    frameBuffer_(new FrameBuffer(width, height)),
-    program_(shaders),
-    vertexArray_(vertexArray_)
+    frameBuffer_(new FrameBuffer(width_, height_)),
+    vertexArray_(vertexArray_),
+    program_(program_),
+    projection_(
+        glm::perspective(
+            glm::radians(45.0f), (float)width_ / (float)height_, 1.0f, 10000.0f
+        )
+    ),
+    view_(camera_.getViewMatrix()),
+    model_(1.0f)
 {
-	
+
 }
 
 SceneView::~SceneView()
@@ -26,20 +34,21 @@ SceneView::~SceneView()
 
 }
 
-void SceneView::resize(int width, int height)
+void SceneView::resize_(int width, int height)
 {
     width_ = width;
     height_ = height;
     frameBuffer_ = FrameBuffer::Ptr(new FrameBuffer(width, height));
+    projection_ = glm::perspective(
+        glm::radians(45.0f), (float)width_ / (float)height_, 1.0f, 10000.0f
+    );
 }
 
 void SceneView::render()
 {
-    ImGui::Begin("Scene View");
-
     ImVec2 contentRegionSize = ImGui::GetContentRegionAvail();
     if (contentRegionSize.x != width_ || contentRegionSize.y != height_) {
-        resize(contentRegionSize.x, contentRegionSize.y);
+        resize_(contentRegionSize.x, contentRegionSize.y);
     }
 
     frameBuffer_->bind();
@@ -48,51 +57,83 @@ void SceneView::render()
     glClearColor(0.1f, 0.0f, 0.2f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    program_.use();
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)width_ / (float)height_, 1.0f, 10000.0f);
-    glm::mat4 view = camera_.getViewMatrix();
-    glm::mat4 model = glm::mat4(1.0f);
-    program_.setMat4(glm::value_ptr(projection), "projection");
-    program_.setMat4(glm::value_ptr(view), "view");
-    program_.setMat4(glm::value_ptr(model), "model");
-    
-    // frameBuffer_->texture()->bind();
-    vertexArray_->draw(GL_POINTS);
-    // frameBuffer_->texture()->unbind();
+    if (program_ != nullptr) {
+        program_->use();
+        onUseProgram_();
+        if (vertexArray_ != nullptr) {
+            vertexArray_->draw();
+        }
+    }
 
     frameBuffer_->unbind();
 
     ImGui::Image(
         (void*)(intptr_t)frameBuffer_->texture()->id(),
-        // reinterpret_cast<void*>(frameBuffer_->texture()->id()),
-        ImVec2{ (float)width_, (float)height_ }
+        contentRegionSize
     );
 
-    if (ImGui::IsItemHovered()) {
-        adjustCamera();
+    if (!ImGui::IsItemHovered()) {
+        return;
     }
 
-    ImGui::End();
-}
-
-void SceneView::adjustCamera()
-{
     ImGuiIO& io = ImGui::GetIO();
-
-    if (ImGui::IsMouseDown(0)) { // Mouse left button down.
-        camera_.moveUp(io.MouseDelta.y);
-        camera_.moveLeft(io.MouseDelta.x);
+    if (
+        ImGui::IsMouseDown(ImGuiMouseButton_Left) ||
+        io.MouseWheel != 0.0f
+    ) {
+        adjustCamera_(
+            io.MouseDelta.x * 0.3f,
+            io.MouseDelta.y * 0.3f,
+            io.MouseWheel
+        );
+        onAdjustCamera_();
     }
-
-    if (ImGui::IsMouseDown(1)) { // Mouse right button down.
-        camera_.yawRight(io.MouseDelta.x);
-        camera_.pitchUp(io.MouseDelta.y);
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+        adjustModel_(
+            io.MouseDelta.x * 0.01f,
+            io.MouseDelta.y * 0.01f
+        );
+        onAdjustModel_();
     }
-
-    camera_.moveForward(io.MouseWheel);
 }
 
+void SceneView::setVertexArray(const VertexArray* vertexArray)
+{
+    vertexArray_ = vertexArray;
+}
 
+void SceneView::setInitTran(const glm::mat4& tran)
+{
+    model_ = tran;
+}
+
+void SceneView::setProgram(const Program* program)
+{
+    program_ = program;
+}
+
+void SceneView::adjustCamera_(float left, float down, float forward)
+{
+    camera_.moveDown(down);
+    camera_.moveLeft(left);
+    camera_.moveForward(forward);
+    view_ = camera_.getViewMatrix();
+}
+
+void SceneView::adjustModel_(float rx, float ry)
+{
+    glm::mat4 rotate(1.0f);
+    rotate = glm::rotate(rotate, rx, glm::vec3( 0.0f, 1.0f, 0.0f));
+    rotate = glm::rotate(rotate, ry, glm::vec3(-1.0f, 0.0f, 0.0f));
+    model_ = rotate * model_;
+}
+
+void SceneView::onUseProgram_()
+{
+    program_->setMat4(glm::value_ptr(view_), "view");
+    program_->setMat4(glm::value_ptr(model_), "model");
+    program_->setMat4(glm::value_ptr(projection_), "projection");
+}
 
 } // namespace s3r
 

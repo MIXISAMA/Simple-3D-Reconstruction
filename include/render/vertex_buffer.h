@@ -9,7 +9,7 @@ class VertexBuffer
 {
 public:
 
-    VertexBuffer(void* data, GLsizeiptr dataSize);
+    VertexBuffer(GLenum mode, void* data, GLsizeiptr dataSize);
     ~VertexBuffer();
 
     void bind() const;
@@ -18,6 +18,8 @@ public:
     GLuint vbo() const;
 
 protected:
+
+    GLenum mode_;
 
     GLuint vbo_;
 

@@ -13,6 +13,7 @@ public:
     ~Camera();
 
     glm::mat4 getViewMatrix() const;
+    glm::vec3 getViewPoint() const;
 
     void moveForward(float delta);
     void moveBackWard(float delta);

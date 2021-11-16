@@ -13,6 +13,7 @@ CameraWindow::CameraWindow(OutputFileWindow::Context* outputContext) :
     frame_(nullptr),
     IContext(outputContext),
     imageOutputDir_(nullptr),
+    calibratedImageOutputDir_(nullptr),
     cameraParameterOutputDir_(nullptr),
     cameraParameterFile_(nullptr),
     calibration_(),
@@ -135,7 +136,7 @@ void CameraWindow::renderOriginalCamera_()
             frame_->data
         ));
         fs::path filename = std::to_string(++imageOutputCount_) + ".png";
-        outputShootImage_(shootImage, filename);
+        outputShootImage_(imageOutputDir_, "Camera-Shoots", shootImage, filename);
     }
     if (isShootDisable) {
         ImGui::EndDisabled();
@@ -235,14 +236,25 @@ void CameraWindow::renderCalibratedCamera_()
         data
     );
 
-    delete[] (char*)data;
-
     float width = ImGui::GetContentRegionAvail().x;
     float height = width * frame_->height / frame_->width;
     ImGui::Image(
         (void*)(intptr_t)undistortTexture_.id(),
         ImVec2(width, height)
     );
+
+    if (ImGui::Button("Shoot")) {
+        Image::Ptr shootImage(new Image(
+            frame_->width,
+            frame_->height,
+            frame_->data_bytes, 3,
+            data
+        ));
+        fs::path filename = std::to_string(++imageOutputCount_) + ".png";
+        outputShootImage_(imageOutputDir_, "Undistorted-Img", shootImage, filename);
+    }
+
+    delete[] (char*)data;
 }
 
 void CameraWindow::renderCalibratedCameraDnd_()
@@ -268,7 +280,6 @@ void CameraWindow::renderCalibratedCameraDnd_()
         catch (cv::Exception e) {
 
         }
-        
     }
     ImGui::EndDragDropTarget();
 }
@@ -287,9 +298,27 @@ void CameraWindow::renderOperationOptions_()
         ImGui::EndDisabled();
     }
 
+    ImGui::RadioButton<Calibration::Pattern>(
+        "Chess Board",
+        &calibration_.pattern,
+        Calibration::Pattern::CHESSBOARD
+    );
+    ImGui::SameLine();
+    ImGui::RadioButton(
+        "Circles Grid",
+        &calibration_.pattern,
+        Calibration::Pattern::CIRCLES_GRID
+    );
+    ImGui::SameLine();
+    ImGui::RadioButton(
+        "Asymmetric Circles Grid",
+        &calibration_.pattern,
+        Calibration::Pattern::ASYMMETRIC_CIRCLES_GRID
+    );
+
     ImGui::InputInt("Pattern Width", &calibration_.boardWidth);
     ImGui::InputInt("Pattern Height", &calibration_.boardHeight);
-    ImGui::InputInt("Square Size (mm)", &calibration_.squareSize);
+    ImGui::InputFloat("Square Size (mm)", &calibration_.squareSize);
 }
 
 void CameraWindow::renderCalibrationProcess_()
@@ -375,17 +404,11 @@ void CameraWindow::addCalibrationImagesMap_(const ISaveable::Ptr& saveable)
 void CameraWindow::outputCameraParameter_(
     cv::Mat& intrinsic,
     cv::Mat& distCoeffs,
-    fs::path& filename)
+    fs::path& filename
+)
 {
     if (cameraParameterOutputDir_ == nullptr) {
-        char nameBuffer[50];
-        time_t now = time(0);
-        tm* localTime = localtime(&now);
-        strftime(nameBuffer, 50, "Camera-Parameter %Y-%m-%d %H:%M:%S", localTime);
-
-        fs::path dirname(nameBuffer);
-        cameraParameterOutputDir_ = MemoryDirectory::Ptr(new MemoryDirectory(dirname));
-        outputContext_->add(cameraParameterOutputDir_);
+        outputContext_->add(cameraParameterOutputDir_, "Camera-Parameter");
     }
 
     CameraParameterFile::Ptr file(
@@ -394,21 +417,19 @@ void CameraWindow::outputCameraParameter_(
     cameraParameterOutputDir_->files.push_back(file);
 }
 
-void CameraWindow::outputShootImage_(Image::Ptr& image, fs::path& filename)
+void CameraWindow::outputShootImage_(
+    MemoryDirectory::Ptr& outputDir,
+    const std::string& defaultDirName,
+    const Image::Ptr& image,
+    const fs::path& filename
+)
 {
-    if (imageOutputDir_ == nullptr) {
-        char nameBuffer[50];
-        time_t now = time(0);
-        tm* localTime = localtime(&now);
-        strftime(nameBuffer, 50, "Camera-Shoots %Y-%m-%d %H:%M:%S", localTime);
-
-        fs::path dirname(nameBuffer);
-        imageOutputDir_ = MemoryDirectory::Ptr(new MemoryDirectory(dirname));
-        outputContext_->add(imageOutputDir_);
+    if (outputDir == nullptr) {
+        outputContext_->add(outputDir, defaultDirName);
     }
 
     ImageFile::Ptr file(new ImageFile(filename, image));
-    imageOutputDir_->files.push_back(file);
+    outputDir->files.push_back(file);
 }
 
 } // namespace s3r

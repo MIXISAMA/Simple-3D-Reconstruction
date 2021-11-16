@@ -10,7 +10,7 @@ class Program
 {
 public:
 
-    Program(std::vector<Shader::Ptr>& shaders);
+    Program(const std::vector<Shader*>& shaders);
     ~Program();
 
     Program(const Program&) = delete;
@@ -20,7 +20,8 @@ public:
 
     GLuint id() const;
 
-    void setFloat(float v, const char* name) const;
+    void setInt(int i, const char* name) const;
+    void setFloat(float f, const char* name) const;
     void setVec3(float* vec3, const char* name) const;
     void setMat4(float* mat4, const char* name) const;
 

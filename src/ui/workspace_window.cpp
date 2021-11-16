@@ -113,8 +113,9 @@ void WorkspaceWindow::renderSaveableDnd_(const fs::path& parentPath)
     }
 
     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_PATH")) {
-        IM_ASSERT(payload->DataSize == sizeof(fs::path*));
+        IM_ASSERT(payload->DataSize == sizeof(fs::path));
         const fs::path& path = *(fs::path*)payload->Data;
+        // Todo: move files
         // rootDir_ = Directory::Ptr(new Directory(path.filename()));
     }
 

@@ -1,20 +1,21 @@
 #pragma once
 
+#include <atomic>
 #include <ctime>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include <memory>
+#include <cstdint>
 #include <exception>
-#include <shared_mutex>
 #include <filesystem>
 #include <fstream>
-#include <cstdint>
-#include <atomic>
+#include <future>
+#include <functional>
+#include <iostream>
+#include <iomanip>
+#include <map>
+#include <memory>
+#include <set>
+#include <shared_mutex>
+#include <string>
+#include <vector>
 
 #include "glog/logging.h"
 
@@ -37,6 +38,15 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include <boost/filesystem.hpp>
+#include <boost/process.hpp>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+
+#define PROJECT_NAME "Simple-3D-Reconstruction"
 
 namespace mixi
 {
@@ -45,5 +55,6 @@ namespace mixi
         using std::int32_t;
         using std::uint32_t;
         namespace fs = std::filesystem;
+        namespace bp = boost::process;
     }
 }

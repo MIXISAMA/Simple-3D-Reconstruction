@@ -1,8 +1,13 @@
 #include "ui/main_window.h"
 
 #include "ui/camera_window.h"
-#include "ui/sparse_point_cloud_window.h"
-#include "ui/dense_point_cloud_window.h"
+#include "view/sparse_point_cloud.h"
+#include "view/dense_point_cloud.h"
+#include "view/rough_mesh.h"
+#include "view/refine_mesh.h"
+#include "view/texture_mesh.h"
+
+#include "util/utils.h"
 
 namespace mixi
 {
@@ -31,21 +36,22 @@ void MainWindow::renderUsageWindow_()
     switch (usageSelectorWindow_.selected())
     {
     case UsageSelectorWindow::Usage::CAMERA:
-        if(dynamic_cast<CameraWindow*>(usageWindow_.get()) == nullptr) {
-            usageWindow_ = ImguiWindow::Ptr(
-                new CameraWindow(outputFileWindow_.context())
-            );
-        }
+        ResetIfCanNotCast<CameraWindow          >(usageWindow_, outputFileWindow_.context());
         break;
     case UsageSelectorWindow::Usage::SPARSE_POINT_CLOUD:
-        if(dynamic_cast<SparsePointCloudWindow*>(usageWindow_.get()) == nullptr) {
-            usageWindow_ = ImguiWindow::Ptr(new SparsePointCloudWindow());
-        }
+        ResetIfCanNotCast<SparsePointCloudView  >(usageWindow_);
         break;
     case UsageSelectorWindow::Usage::DENSE_POINT_CLOUD:
-        if(dynamic_cast<DensePointCloudWindow*>(usageWindow_.get()) == nullptr) {
-            usageWindow_ = ImguiWindow::Ptr(new DensePointCloudWindow());
-        }
+        ResetIfCanNotCast<DensePointCloudView   >(usageWindow_);
+        break;
+    case UsageSelectorWindow::Usage::ROUGH_MESH:
+        ResetIfCanNotCast<RoughMeshView         >(usageWindow_);
+        break;
+    case UsageSelectorWindow::Usage::REFINE_MESH:
+        ResetIfCanNotCast<RefineMeshView        >(usageWindow_);
+        break;
+    case UsageSelectorWindow::Usage::TEXTURE_MESH:
+        ResetIfCanNotCast<TextureMeshView       >(usageWindow_);
         break;
     };
     if (usageWindow_ != nullptr) {

@@ -3,13 +3,14 @@
 namespace mixi
 {
 
-VertexBuffer::VertexBuffer(void* data, GLsizeiptr dataSize) :
+VertexBuffer::VertexBuffer(GLenum mode, void* data, GLsizeiptr dataSize) :
+    mode_(mode),
     vbo_(0)
 {
     glGenBuffers(1, &vbo_);
 
     bind();
-    glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
+    glBufferData(mode_, dataSize, data, GL_STATIC_DRAW);
     unbind();
 }
 
@@ -20,12 +21,12 @@ VertexBuffer::~VertexBuffer()
 
 void VertexBuffer::bind() const
 {
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+    glBindBuffer(mode_, vbo_);
 }
 
 void VertexBuffer::unbind() const
 {
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(mode_, 0);
 }
 
 GLuint VertexBuffer::vbo() const
