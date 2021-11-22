@@ -1,4 +1,4 @@
-#include "util/ply.h"
+#include "file/ply.h"
 
 #include "util/utils.h"
 
@@ -35,7 +35,7 @@ PlyFile::PlyFile(const fs::path& filepath) :
 
 }
 
-void PlyFile::save(const fs::path& parentPath) const
+void PlyFile::save_(const fs::path& parentPath)
 {
     // Todo: save
 }
@@ -205,7 +205,10 @@ bool PlyFile::hasTexcoord() const
 
 void PlyFile::getTextureName(aiString* name) const
 {
-    scene_->mMaterials[0]->GetTexture(aiTextureType_DIFFUSE, 0, name);
+    
+    scene_
+        ->mMaterials[scene_->mNumMaterials - 1]
+        ->GetTexture(aiTextureType_DIFFUSE, 0, name);
 }
 
 } // namespace mixi

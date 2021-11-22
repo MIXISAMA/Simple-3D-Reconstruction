@@ -23,14 +23,6 @@ void ResetIfNullptr(std::unique_ptr<T>& obj, Args&&... args)
     obj.reset(new T(std::forward<Args>(args)...));
 }
 
-// template<class T1, class T2>
-// void ResetIfCanNotCast(std::unique_ptr<T2>& obj)
-// {
-//     if (dynamic_cast<T1*>(obj.get()) == nullptr) {
-//         obj.reset(new T1());
-//     }
-// }
-
 template<class T1, class T2, typename... Args>
 void ResetIfCanNotCast(std::unique_ptr<T2>& obj, Args&&... args)
 {
@@ -133,5 +125,12 @@ private:
     unsigned int stride_;
 
 };
+
+unsigned int GenId();
+
+void MakeSureDirectoryExists(const fs::path& path);
+
+void MakeSureDirectoryExistsRecursive_(const fs::path& absolutePath);
+
 
 }

@@ -3,8 +3,8 @@
 #include "pch.h"
 #include "app/imgui_window.h"
 #include "component/usage_selector_window.h"
-#include "workspace_window.h"
-#include "output_file_window.h"
+#include "component/workspace_window.h"
+#include "component/output_file_window.h"
 
 
 namespace mixi

@@ -10,28 +10,27 @@ class ChildProcess
 public:
 
     template<typename... Args>
-    ChildProcess(const std::atomic<bool>& terminate, Args&&... args) :
-        terminate_(terminate)
+    ChildProcess(Args&&... args) :
+        ips_(),
+        eips_(),
+        process_(std::forward<Args>(args)..., bp::std_out > ips_, bp::std_err > eips_)
     {
-        if (terminate_) {
-            return;
-        }
 
-        bp::child c(std::forward<Args>(args)...);
-
-        while (c.running()) {
-            if (terminate_) {
-                c.terminate();
-            }
-        }
-        c.wait();
     }
 
-    ~ChildProcess() = default;
+    virtual ~ChildProcess();
 
-private:
+    bp::ipstream& ips();
+    bp::ipstream& eips();
 
-    const std::atomic<bool>& terminate_;
+    bool running();
+    void wait();
+
+protected:
+
+    bp::ipstream ips_; // pipeline
+    bp::ipstream eips_; // error pipeline
+    bp::child process_;
 
 };
 

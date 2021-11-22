@@ -1,147 +1,192 @@
 #include "process/sfm.h"
 
 #include "util/child_process.h"
-#include "util/file_util.h"
 
 
 namespace mixi
 {
 
-const int Sfm::MaxProgress = 7;
+// const float Sfm::InitSfmDirProgressWeight = 0.01;
 
 Sfm::Sfm() :
-    tmpDir_(fs::temp_directory_path() / "sfm"),
-    toTerminate_(false),
-    future_(),
-    progress_(0)
+    progress_(0.0f)
 {
     
 }
 
 Sfm::~Sfm()
 {
-    removeTmpDir_();
-}
 
-void Sfm::setTmpDirInfix(const fs::path& infix)
-{
-    removeTmpDir_();
-    tmpDir_ = fs::temp_directory_path() / infix / "sfm";
 }
 
 void Sfm::run(
+    const fs::path& sfmDir,
     const std::vector<fs::path>& imageFiles,
-    const CameraParameterFile* param
+    const std::string& param
 )
 {
-    initTmpDir_();
-    fs::path inputDir(tmpDir_ / "input");
-    for (const fs::path& imageFile : imageFiles) {
-        fs::copy_file(imageFile, inputDir / imageFile.filename());
-    }
-    future_ = std::async(std::launch::async, [this, param] {
-        sequentialPipeline_(param);
-    });
+    progress_ = 0.0f;
+
+    initSfmDir_(sfmDir, imageFiles);
+
+    progress_ = 0.01f;
+    
+    const boost::filesystem::path inputDir(sfmDir / "input");
+    const boost::filesystem::path outputDir(sfmDir / "output");
+    const boost::filesystem::path matchesDir(sfmDir / "matches");
+    const boost::filesystem::path reconstructionDir(sfmDir / "reconstruction");
+
+    float doneProgress = progress_;
+
+    auto dealChild = [this, &doneProgress](
+        ChildProcess&& c,
+        const std::vector<std::string>& keywords
+    ) {
+        bp::ipstream& ips = c.eips();
+        std::string line;
+        float localProgress = 0.0f;
+
+        while (c.running() && std::getline(ips, line)) {
+            localProgress = ProgressParser(keywords, line, localProgress);
+            progress_ = doneProgress + localProgress * 0.14f;
+        }
+        c.wait();
+
+        doneProgress += 0.14f;
+        progress_ = doneProgress;
+    };
+
+    auto ForEachCommand = [dealChild](auto&&... commands) {
+		(
+            dealChild(
+                std::make_from_tuple<ChildProcess>(commands.first),
+                commands.second
+            ), ...
+        );
+	};
+
+    ForEachCommand(
+        std::make_pair(std::make_tuple(
+            bp::search_path("openMVG_main_SfMInit_ImageListing"),
+            "-i", inputDir,
+            "-o", matchesDir,
+            "-k", param
+        ),  std::vector<std::string>{
+            "Listing images"
+        }),
+        std::make_pair(std::make_tuple(
+            bp::search_path("openMVG_main_ComputeFeatures"),
+            "-i", matchesDir / "sfm_data.json",
+            "-o", matchesDir,
+            "-p", "HIGH",
+            // "-m", "SIFT"
+            "-m", "AKAZE_FLOAT"
+        ),  std::vector<std::string> {
+            "EXTRACT FEATURES"
+        }),
+        std::make_pair(std::make_tuple(
+            bp::search_path("openMVG_main_PairGenerator"),
+            "-i", matchesDir / "sfm_data.json",
+            "-o", matchesDir / "pairs.bin"
+        ),  std::vector<std::string> {
+            // Empty
+        }),
+        std::make_pair(std::make_tuple(
+            bp::search_path("openMVG_main_ComputeMatches"),
+            "-i", matchesDir / "sfm_data.json",
+            "-p", matchesDir / "pairs.bin",
+            "-o", matchesDir / "matches.putative.bin",
+            // "-n", "CASCADEHASHINGL2"
+            "-n", "ANNL2"
+            // "-r", "1.2"
+        ),  std::vector<std::string> {
+            "Regions Loading",
+            "Matching"
+        }),
+        std::make_pair(std::make_tuple(
+            bp::search_path("openMVG_main_GeometricFilter"),
+            "-i", matchesDir / "sfm_data.json",
+            "-m", matchesDir / "matches.putative.bin" ,
+            "-g", "f",
+            "-o", matchesDir / "matches.f.bin"
+        ),  std::vector<std::string> {
+            "Regions Loading",
+            "Geometric filtering"
+        }),
+        std::make_pair(std::make_tuple(
+            bp::search_path("openMVG_main_SfM"),
+            "--sfm_engine", "INCREMENTAL",
+            "--input_file", matchesDir / "sfm_data.json",
+            "--match_dir", matchesDir,
+            "--output_dir", reconstructionDir
+            // "-f", "NONE"
+            // "--resection_method", "3"
+        ),  std::vector<std::string> {
+            // Empty
+        }),
+        std::make_pair(std::make_tuple(
+            bp::search_path("openMVG_main_ComputeSfM_DataColor"),
+            "-i", reconstructionDir / "sfm_data.bin",
+            "-o", reconstructionDir / "colorized.ply"
+        ), std::vector<std::string> {
+            "Compute scene structure color"
+        })
+    );
+
+    progress_ = 1.0f;
+
 }
 
-std::future_status Sfm::state()
-{
-    return future_.wait_for(std::chrono::seconds(0));
-}
-
-int Sfm::progress()
+float Sfm::progress()
 {
     return progress_;
 }
 
-void Sfm::terminate()
-{
-    toTerminate_ = true;
-    future_.wait();
-    toTerminate_ = false;
-}
+// void Sfm::terminate()
+// {
+//     toTerminate_ = true;
+//     future_.wait();
+//     toTerminate_ = false;
+// }
 
-void Sfm::initTmpDir_()
+void Sfm::initSfmDir_(
+    const fs::path& sfmDir,
+    const std::vector<fs::path>& imageFiles
+)
 {
-    removeTmpDir_();
-    fs::create_directories(tmpDir_);
-    fs::create_directory(tmpDir_ / "input");
-    fs::create_directory(tmpDir_ / "output");
-    fs::create_directory(tmpDir_ / "matches");
-    fs::create_directory(tmpDir_ / "reconstruction");
-}
+    fs::path inputDir(sfmDir / "input");
 
-void Sfm::removeTmpDir_()
-{
-    if (fs::exists(tmpDir_)) {
-        fs::remove_all(tmpDir_);
+    fs::create_directory(inputDir);
+    fs::create_directory(sfmDir / "output");
+    fs::create_directory(sfmDir / "matches");
+    fs::create_directory(sfmDir / "reconstruction");
+
+    for (int i = 0; i < imageFiles.size(); i++) {
+        std::ostringstream oss;
+        oss << i << imageFiles[i].filename().extension().string();
+        fs::copy_file(imageFiles[i], inputDir / oss.str());
     }
 }
 
-void Sfm::sequentialPipeline_(const CameraParameterFile* param)
+float Sfm::ProgressParser(
+    std::vector<std::string> keywords,
+    std::string line,
+    float defaultProgress
+)
 {
-    progress_ = 0;
-    const boost::filesystem::path inputDir(tmpDir_ / "input");
-    const boost::filesystem::path outputDir(tmpDir_ / "output");
-    const boost::filesystem::path matchesDir(tmpDir_ / "matches");
-    const boost::filesystem::path reconstructionDir(tmpDir_ / "reconstruction");
-    ChildProcess(
-        toTerminate_,
-        bp::search_path("openMVG_main_SfMInit_ImageListing"),
-        "-i", inputDir,
-        "-o", matchesDir,
-        "-k", param->formatIntrinsics()
-    );
-    progress_++;
-    ChildProcess(
-        toTerminate_,
-        bp::search_path("openMVG_main_ComputeFeatures"),
-        "-i", matchesDir / "sfm_data.json",
-        "-o", matchesDir,
-        "-m", "SIFT"
-    );
-    progress_++;
-    ChildProcess(
-        toTerminate_,
-        bp::search_path("openMVG_main_PairGenerator"),
-        "-i", matchesDir / "sfm_data.json",
-        "-o", matchesDir / "pairs.bin"
-    );
-    progress_++;
-    ChildProcess(
-        toTerminate_,
-        bp::search_path("openMVG_main_ComputeMatches"),
-        "-i", matchesDir / "sfm_data.json",
-        "-p", matchesDir / "pairs.bin",
-        "-o", matchesDir / "matches.putative.bin"
-    );
-    progress_++;
-    ChildProcess(
-        toTerminate_,
-        bp::search_path("openMVG_main_GeometricFilter"),
-        "-i", matchesDir / "sfm_data.json",
-        "-m", matchesDir / "matches.putative.bin" ,
-        "-g", "f",
-        "-o", matchesDir / "matches.f.bin"
-    );
-    progress_++;
-    ChildProcess(
-        toTerminate_,
-        bp::search_path("openMVG_main_SfM"),
-        "--sfm_engine", "INCREMENTAL",
-        "--input_file", matchesDir / "sfm_data.json",
-        "--match_dir", matchesDir,
-        "--output_dir", reconstructionDir
-    );
-    progress_++;
-    ChildProcess(
-        toTerminate_,
-        bp::search_path("openMVG_main_ComputeSfM_DataColor"),
-        "-i", reconstructionDir / "sfm_data.bin",
-        "-o", reconstructionDir / "colorized.ply"
-    );
-    progress_++;
+    float doneProgress = 0.0f;
+    for (const std::string& keyword : keywords) {
+        std::smatch result;
+        std::regex pattern(R"(\[- )" + keyword + R"( -\] ([0-9]+)%)");
+        if (std::regex_search(line, result, pattern) && result.size() == 2) {
+            std::istringstream iss(result[1].str());
+            int percent;
+            iss >> percent;
+            return percent / 100.0f / keywords.size() + doneProgress;
+        }
+        doneProgress += 1.0f / keywords.size();
+    }
+    return defaultProgress;
 }
-
 
 } // namespace mixi

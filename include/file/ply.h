@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "file_util.h"
+#include "base.h"
 
 #include "render/vertex_array.h"
 
@@ -17,8 +17,6 @@ public:
     PlyFile(const fs::path& filepath);
     
     ~PlyFile() = default;
-
-    void save(const fs::path& parentPath) const override;
 
     void parseVertexArray(VertexArray** vertexArray) const;
 
@@ -36,6 +34,8 @@ private:
 
     Assimp::Importer importer_;
     const aiScene* scene_;
+
+    virtual void save_(const fs::path& parentPath) override;
 
     void newDataPoint_(const aiMesh* mesh, char** data, int* dataBytes) const;
     void newDataPointColor_(const aiMesh* mesh, char** data, int* dataBytes) const;

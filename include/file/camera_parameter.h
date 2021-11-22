@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "file_util.h"
+#include "base.h"
 
 namespace mixi
 {
@@ -17,8 +17,6 @@ public:
 
     ~CameraParameterFile() = default;
 
-    void save(const fs::path& parentPath) const override;
-
     std::string formatIntrinsics() const;
 
     cv::Mat intrinsic() const;
@@ -28,6 +26,8 @@ protected:
 
     cv::Mat intrinsic_;
     cv::Mat distCoeffs_;
+
+    virtual void save_(const fs::path& parentPath) override;
 
 };
 

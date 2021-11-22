@@ -2,8 +2,8 @@
 
 #include "pch.h"
 
-#include "util/image.h"
-#include "util/camera_parameter.h"
+#include "file/image.h"
+#include "file/camera_parameter.h"
 
 
 namespace mixi
@@ -16,34 +16,30 @@ public:
     Sfm();
     ~Sfm();
 
-    void setTmpDirInfix(const fs::path& infix);
-
     void run(
+        const fs::path& sfmDir, // sfmDir must be empty and exists.
         const std::vector<fs::path>& imageFiles,
-        const CameraParameterFile* param
+        const std::string& param
     );
 
-    void terminate();
+    // void terminate();
 
-    int progress();
+    float progress();
 
-    std::future_status state();
-
-    static const int MaxProgress;
+    static float ProgressParser(
+        std::vector<std::string> keywords,
+        std::string line,
+        float defaultProgress
+    );
 
 private:
 
-    fs::path tmpDir_;
+    std::atomic<float> progress_;
 
-    std::atomic<bool> toTerminate_;
-    std::future<void> future_;
-
-    std::atomic<int> progress_;
-
-    void initTmpDir_();
-    void removeTmpDir_();
-
-    void sequentialPipeline_(const CameraParameterFile* param);
+    void initSfmDir_(
+        const fs::path& sfmDir,
+        const std::vector<fs::path>& imageFiles
+    );
 
 };
 

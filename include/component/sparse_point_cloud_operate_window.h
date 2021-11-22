@@ -22,6 +22,8 @@ public:
 
     void setRunnable(bool runnable);
 
+    const char* pkgName();
+
 private:
 
     std::function<void(void)> onSfmCallback_;
@@ -29,6 +31,8 @@ private:
     float progress_;
 
     bool runnable_;
+
+    char pkgName_[50];
 
 };
 

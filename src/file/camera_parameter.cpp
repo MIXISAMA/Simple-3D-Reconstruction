@@ -1,4 +1,4 @@
-#include "util/camera_parameter.h"
+#include "file/camera_parameter.h"
 
 namespace mixi
 {
@@ -24,7 +24,7 @@ CameraParameterFile::CameraParameterFile(fs::path& filename, cv::Mat& intrinsic,
 
 }
 
-void CameraParameterFile::save(const fs::path& parentPath) const
+void CameraParameterFile::save_(const fs::path& parentPath)
 {
     cv::FileStorage xml(parentPath / filename_, cv::FileStorage::WRITE);
     xml << "Intrinsic-Matrix" << intrinsic_;

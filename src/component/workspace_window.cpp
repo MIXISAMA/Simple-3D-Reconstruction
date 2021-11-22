@@ -1,6 +1,6 @@
-#include "ui/workspace_window.h"
+#include "component/workspace_window.h"
 
-#include "util/file_util.h"
+#include "file/base.h"
 
 
 namespace mixi
@@ -12,7 +12,9 @@ WorkspaceWindow::WorkspaceWindow() :
     rootNode_(nullptr),
     dndPath_(),
     // fileSelectedSet_(),
-    fileDialog_(ImGuiFileBrowserFlags_SelectDirectory)
+    fileDialog_(ImGuiFileBrowserFlags_SelectDirectory),
+    saveFuture_(),
+    saveableFile_(nullptr)
 {
     fileDialog_.SetTitle("Choose a directory as the workspace");
 }
@@ -21,15 +23,55 @@ void WorkspaceWindow::render()
 {
     ImGui::Begin("Workspace");
 
-    if (rootNode_ == nullptr ||
-        !fs::exists(rootNode_->path())) {
-        renderFileDialog_();
-    }
-    else {
+    renderFileDialog_();
+
+    ImGui::Separator();
+
+    bool isRenderProgress = isRenderProgress_();
+
+    if (rootNode_ != nullptr && fs::exists(rootNode_->path())) {
+        ImVec2 size = ImGui::GetContentRegionAvail();
+        if (isRenderProgress) {
+            size.y -= 30;
+        }
+        ImGui::BeginChild("workspace dir", size);
         renderWorkspace_();
+        ImGui::EndChild();
     }
     
+    if (isRenderProgress) {
+        renderProgress_();
+    }
+
     ImGui::End();
+}
+
+bool WorkspaceWindow::isRenderProgress_()
+{
+    static int Count = 0;
+
+    if (!saveFuture_.valid() || saveableFile_ == nullptr) {
+        return false;
+    }
+
+    if (saveFuture_.wait_for(std::chrono::seconds(0)) == std::future_status::timeout) {
+        Count = 0;
+        return true;
+    }
+
+    if (saveFuture_.wait_for(std::chrono::seconds(0)) == std::future_status::ready &&
+        Count < 120
+    ) {
+        Count++;
+        return true;
+    }
+
+    return false;
+}
+
+void WorkspaceWindow::renderProgress_()
+{
+    ImGui::ProgressBar(saveableFile_->progress());
 }
 
 
@@ -77,7 +119,12 @@ void WorkspaceWindow::renderDirsRecursive_(
         const fs::path& dirName = dir->nodeName();
         const fs::path dirPath = parentPath / dirName;
         bool isOpen = ImGui::TreeNode(dirName.c_str());
-        renderSaveableDnd_(dirPath);
+
+        if (!saveFuture_.valid() ||
+            saveFuture_.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+            renderSaveableDnd_(dirPath);
+        }
+        
         renderPathDnd_(dirPath);
 
         if (!isOpen) {
@@ -108,8 +155,10 @@ void WorkspaceWindow::renderSaveableDnd_(const fs::path& parentPath)
     
     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_SAVEABLE")) {
         IM_ASSERT(payload->DataSize == sizeof(ISaveable::Ptr));
-        ISaveable::Ptr& dir = *(ISaveable::Ptr*)payload->Data;
-        dir->save(parentPath);
+        saveableFile_ = *(ISaveable::Ptr*)payload->Data;
+        saveFuture_ = std::async(std::launch::async, [this, parentPath]{
+            saveableFile_->save(parentPath);
+        });
     }
 
     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_PATH")) {

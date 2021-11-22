@@ -1,6 +1,7 @@
 #include "ui/camera_window.h"
 
 #include "ui/widget.h"
+
 namespace mixi
 {
 namespace s3r

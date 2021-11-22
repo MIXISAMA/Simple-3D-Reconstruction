@@ -5,9 +5,9 @@
 
 #include "render/texture.h"
 #include "util/usb_camera.h"
-#include "util/image.h"
-#include "util/camera_parameter.h"
-#include "output_file_window.h"
+#include "file/image.h"
+#include "file/camera_parameter.h"
+#include "component/output_file_window.h"
 #include "process/calibration.h"
 
 namespace mixi

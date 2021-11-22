@@ -39,19 +39,19 @@ void MainWindow::renderUsageWindow_()
         ResetIfCanNotCast<CameraWindow          >(usageWindow_, outputFileWindow_.context());
         break;
     case UsageSelectorWindow::Usage::SPARSE_POINT_CLOUD:
-        ResetIfCanNotCast<SparsePointCloudView  >(usageWindow_);
+        ResetIfCanNotCast<SparsePointCloudView  >(usageWindow_, outputFileWindow_.context());
         break;
     case UsageSelectorWindow::Usage::DENSE_POINT_CLOUD:
-        ResetIfCanNotCast<DensePointCloudView   >(usageWindow_);
+        ResetIfCanNotCast<DensePointCloudView   >(usageWindow_, outputFileWindow_.context());
         break;
     case UsageSelectorWindow::Usage::ROUGH_MESH:
-        ResetIfCanNotCast<RoughMeshView         >(usageWindow_);
+        ResetIfCanNotCast<RoughMeshView         >(usageWindow_, outputFileWindow_.context());
         break;
     case UsageSelectorWindow::Usage::REFINE_MESH:
-        ResetIfCanNotCast<RefineMeshView        >(usageWindow_);
+        ResetIfCanNotCast<RefineMeshView        >(usageWindow_, outputFileWindow_.context());
         break;
     case UsageSelectorWindow::Usage::TEXTURE_MESH:
-        ResetIfCanNotCast<TextureMeshView       >(usageWindow_);
+        ResetIfCanNotCast<TextureMeshView       >(usageWindow_, outputFileWindow_.context());
         break;
     };
     if (usageWindow_ != nullptr) {

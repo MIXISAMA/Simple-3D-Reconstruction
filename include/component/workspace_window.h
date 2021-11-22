@@ -5,6 +5,8 @@
 #include "imfilebrowser.h"
 #include "util/workspace_file_system.h"
 
+#include "file/base.h"
+
 namespace mixi
 {
 namespace s3r
@@ -39,6 +41,9 @@ private:
 
     fs::path dndPath_;
 
+    std::future<void> saveFuture_;
+    ISaveable::Ptr saveableFile_;
+
     void renderFileDialog_();
 
     void renderWorkspace_();
@@ -55,6 +60,10 @@ private:
     void renderSaveableDnd_(const fs::path& parentPath);
 
     void renderPathDnd_(const fs::path& path);
+
+    void renderProgress_();
+
+    bool isRenderProgress_();
 
     // void renderFileDnd_(const fs::path& parentPath);
 

@@ -1,6 +1,6 @@
 #include "ui/scene_view.h"
 
-#include "util/ply.h"
+#include "file/ply.h"
 
 namespace mixi
 {

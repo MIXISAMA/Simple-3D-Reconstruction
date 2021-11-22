@@ -12,9 +12,11 @@
 #include <iomanip>
 #include <map>
 #include <memory>
+#include <regex>
 #include <set>
 #include <shared_mutex>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "glog/logging.h"

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pch.h"
-#include "file_util.h"
 
 namespace mixi
 {
@@ -35,23 +34,5 @@ protected:
 
 };
 
-class ImageFile : public MemoryFile
-{
-public:
 
-    ImageFile(const fs::path& filepath);
-    ImageFile(const fs::path& filename, const Image::Ptr& image);
-
-    ~ImageFile() = default;
-
-    void save(const fs::path& parentPath) const override;
-    Image::Ptr image() const;
-
-protected:
-
-    Image::Ptr image_;
-
-};
-
-
-}
+} // namespace mixi

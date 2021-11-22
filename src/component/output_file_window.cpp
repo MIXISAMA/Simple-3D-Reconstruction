@@ -1,4 +1,4 @@
-#include "ui/output_file_window.h"
+#include "component/output_file_window.h"
 
 namespace mixi
 {

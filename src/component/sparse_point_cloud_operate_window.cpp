@@ -5,10 +5,13 @@ namespace mixi
 namespace s3r
 {
 
-SparsePointCloudOperateWindow::SparsePointCloudOperateWindow(std::function<void(void)> onSfmCallback) :
+SparsePointCloudOperateWindow::SparsePointCloudOperateWindow(
+    std::function<void(void)> onSfmCallback
+) :
     onSfmCallback_(onSfmCallback),
     progress_(0.0f),
-    runnable_(false)
+    runnable_(false),
+    pkgName_("model")
 {
 
 }
@@ -16,6 +19,8 @@ SparsePointCloudOperateWindow::SparsePointCloudOperateWindow(std::function<void(
 void SparsePointCloudOperateWindow::render()
 {
     ImGui::Begin("Sparse Point Cloud Operate");
+
+    ImGui::InputText("Model Name", pkgName_, IM_ARRAYSIZE(pkgName_));
 
     if (!runnable_) {
         ImGui::BeginDisabled();
@@ -46,6 +51,11 @@ void SparsePointCloudOperateWindow::setProgress(float progress)
 void SparsePointCloudOperateWindow::setRunnable(bool runnable)
 {
     runnable_ = runnable;
+}
+
+const char* SparsePointCloudOperateWindow::pkgName()
+{
+    return pkgName_;
 }
 
 } // namespace s3r

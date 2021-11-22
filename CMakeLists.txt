@@ -6,13 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(3rdparty/glad)
 add_subdirectory(3rdparty/glfw)
 add_subdirectory(3rdparty/imgui)
-# add_subdirectory(3rdparty/ImGuiFileDialog)
-# add_subdirectory(3rdparty/opencv)
-# add_subdirectory(3rdparty/gflags)
-# add_subdirectory(3rdparty/glog)
-# add_subdirectory(3rdparty/eigen)
-# add_subdirectory(3rdparty/CGAL)
-# add_subdirectory(3rdparty/vcg)
+
 find_package(gflags REQUIRED)
 find_package(glog REQUIRED)
 find_package(OpenCV REQUIRED)
@@ -21,8 +15,6 @@ find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(assimp REQUIRED)
 
 add_dependencies(imgui glfw)
-# add_dependencies(ImGuiFileDialog imgui)
-# add_dependencies(glog gflags)
 
 aux_source_directory(src MAIN_SRC_DIR)
 aux_source_directory(src/app APP_SRC_DIR)
@@ -33,6 +25,7 @@ aux_source_directory(src/element ELEMENT_SRC_DIR)
 aux_source_directory(src/process PROCESS_SRC_DIR)
 aux_source_directory(src/component COMPONENT_SRC_DIR)
 aux_source_directory(src/view VIEW_SRC_DIR)
+aux_source_directory(src/file FILE_SRC_DIR)
 
 set(SOURCE_LIST
     ${MAIN_SRC_DIR}
@@ -44,6 +37,7 @@ set(SOURCE_LIST
     ${PROCESS_SRC_DIR}
     ${COMPONENT_SRC_DIR}
     ${VIEW_SRC_DIR}
+    ${FILE_SRC_DIR}
 )
 
 if(APPLE)

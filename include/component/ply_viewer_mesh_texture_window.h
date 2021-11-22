@@ -5,7 +5,7 @@
 #include "app/imgui_window.h"
 
 #include "ui/scene_view_mesh_texture.h"
-#include "util/ply.h"
+#include "file/ply.h"
 
 namespace mixi
 {

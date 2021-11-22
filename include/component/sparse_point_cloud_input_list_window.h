@@ -4,8 +4,8 @@
 
 #include "app/imgui_window.h"
 
-#include "util/image.h"
-#include "util/camera_parameter.h"
+#include "file/image.h"
+#include "file/camera_parameter.h"
 
 namespace mixi
 {
